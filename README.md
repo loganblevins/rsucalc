@@ -31,7 +31,8 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
 - `--state-rate, -t`: State tax rate (as decimal, e.g., 0.05 for 5%)
 - `--shares-sold-for-taxes, -x`: Number of shares sold for tax withholding
 - `--tax-sale-price, -a`: Price per share when sold for taxes
-- `--include-capital-gains, -c`: Include short-term capital gains tax calculation (uses federal tax rate)
+- `--include-capital-gains, -c`: Include short-term capital gains tax calculation (uses federal + state tax rates)
+- `--include-net-investment-tax, -n`: Include 3.8% Net Investment Income Tax (NIIT) on capital gains for high-income earners
 
 ### Example
 
@@ -45,13 +46,14 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
   --state-rate 0.05 \
   --shares-sold-for-taxes 25 \
   --tax-sale-price 120.00 \
-  --include-capital-gains
+  --include-capital-gains \
+  --include-net-investment-tax
 ```
 
 Or using short options:
 
 ```bash
-./rsucalc -v 100.00 -s 100 -p 120.00 -f 0.0765 -r 0.22 -t 0.05 -x 25 -a 120.00 -c
+./rsucalc -v 100.00 -s 100 -p 120.00 -f 0.0765 -r 0.22 -t 0.05 -x 25 -a 120.00 -c -n
 ```
 
 ## How It Works
@@ -93,6 +95,17 @@ The calculator can account for short-term capital gains tax when the required sa
 
 Use the `--include-capital-gains` flag when you expect to sell above the vest day price.
 
+### Net Investment Income Tax (NIIT)
+
+High-income earners may be subject to an additional 3.8% Net Investment Income Tax (NIIT) on capital gains. The calculator can include this tax:
+
+- **When it applies**: Only when capital gains are present (sale price > vest day price)
+- **Tax rate**: Additional 3.8% on top of federal + state capital gains rates
+- **Total rate**: Federal rate + State rate + 3.8% NIIT
+- **Example**: 22% federal + 5% state + 3.8% NIIT = 30.8% total capital gains rate
+
+Use the `--include-net-investment-tax` flag along with `--include-capital-gains` for high-income earners.
+
 ## Use Cases
 
 - **Planning**: Determine if you need to wait for a higher price to achieve your target net income
@@ -129,13 +142,16 @@ The test suite covers:
 - ✅ Capital gains tax calculations (federal + state rates)
 - ✅ Capital gains edge cases (no profit, losses, zero state tax)
 - ✅ Capital gains mathematical consistency
+- ✅ Net Investment Income Tax (NIIT) calculations
+- ✅ NIIT with various tax rate combinations
+- ✅ NIIT mathematical consistency and performance
 
 ### Test Results
 
 All tests should pass with 0 failures:
 ```
 Test Suite 'RSUCalculatorTests' passed
-Executed 27 tests, with 0 failures
+Executed 34 tests, with 0 failures
 ```
 
 ## Requirements
