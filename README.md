@@ -122,9 +122,6 @@ The project includes comprehensive unit tests to ensure calculation accuracy and
 # Run all tests
 swift test
 
-# Run with verbose output
-./run-tests.sh
-
 # Run specific test
 swift test --filter testRealWorldScenario
 ```
