@@ -32,6 +32,9 @@ struct RSURunner: ParsableCommand {
     @Option(name: [.customShort("a"), .customLong("tax-sale-price")], help: "Price per share when sold for taxes")
     var taxSalePrice: Double
     
+    @Flag(name: [.customShort("c"), .customLong("include-capital-gains")], help: "Include short-term capital gains tax calculation (uses federal tax rate)")
+    var includeCapitalGains: Bool = false
+    
     mutating func run() throws {
         let calculator = RSUCalculator()
         let result = calculator.calculateRequiredSalePrice(
@@ -42,7 +45,8 @@ struct RSURunner: ParsableCommand {
             federalRate: federalRate,
             stateRate: stateRate,
             sharesSoldForTaxes: sharesSoldForTaxes,
-            taxSalePrice: taxSalePrice
+            taxSalePrice: taxSalePrice,
+            includeCapitalGains: includeCapitalGains
         )
         
         print("\n📊 RSU Calculator Results")
@@ -66,6 +70,24 @@ struct RSURunner: ParsableCommand {
         print("   Net Income Target: $\(String(format: "%.2f", result.netIncomeTarget))")
         print("   Shares After Tax Sale: \(result.sharesAfterTaxSale)")
         print("   Tax Sale Proceeds: $\(String(format: "%.2f", result.taxSaleProceeds))")
+        
+        if includeCapitalGains {
+            print("   📊 Capital Gains Analysis:")
+            if let capitalGainsTax = result.capitalGainsTax {
+                print("   ✅ Capital gains tax applied (sale price > vest day price)")
+                print("   💰 Capital Gains Tax: $\(String(format: "%.2f", capitalGainsTax))")
+                print("   💵 Net After Capital Gains: $\(String(format: "%.2f", result.netAfterCapitalGains!))")
+                
+                // Calculate what the required sale price would be without capital gains
+                let withoutCapGainsPrice = result.netIncomeTarget / Double(result.sharesAfterTaxSale)
+                print("   📈 Required sale price WITH capital gains: $\(String(format: "%.2f", result.requiredSalePrice))")
+                print("   📉 Required sale price WITHOUT capital gains: $\(String(format: "%.2f", withoutCapGainsPrice))")
+                print("   💸 Capital gains impact: +$\(String(format: "%.2f", result.requiredSalePrice - withoutCapGainsPrice)) per share")
+            } else {
+                print("   ⚠️  Capital gains tax ignored (required sale price ≤ vest day price)")
+                print("   📊 No profit to tax - selling at or below cost basis")
+            }
+        }
         
         print("\n🎯 Required Sale Price:")
         print("   To achieve your target net income of $\(String(format: "%.2f", result.netIncomeTarget))")

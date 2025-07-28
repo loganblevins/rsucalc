@@ -340,6 +340,151 @@ final class RSUCalculatorTests: XCTestCase {
         XCTAssertEqual(result.requiredSalePrice, result.netIncomeTarget / Double(result.sharesAfterTaxSale), accuracy: 0.01)
     }
     
+    // MARK: - Capital Gains Tests
+    
+    func testCapitalGainsWithProfit() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true
+        )
+        
+        XCTAssertEqual(result.grossIncomeVCD, 10000.0, accuracy: 0.01)
+        XCTAssertEqual(result.grossIncomeVestDay, 8000.0, accuracy: 0.01)
+        XCTAssertEqual(result.netIncomeTarget, 6535.0, accuracy: 0.01)
+        XCTAssertEqual(result.sharesAfterTaxSale, 75)
+        XCTAssertEqual(result.requiredSalePrice, 89.77, accuracy: 0.01)
+        XCTAssertNotNil(result.capitalGainsTax)
+        XCTAssertNotNil(result.netAfterCapitalGains)
+        XCTAssertEqual(result.capitalGainsTax!, 197.88, accuracy: 0.01)
+        XCTAssertEqual(result.netAfterCapitalGains!, 6337.12, accuracy: 0.01)
+    }
+    
+    func testCapitalGainsWithoutProfit() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 100.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 100.0,
+            includeCapitalGains: true
+        )
+        
+        // When vest day price = VCD price, required sale price should be same as without capital gains
+        XCTAssertEqual(result.requiredSalePrice, 87.13, accuracy: 0.01)
+        XCTAssertNil(result.capitalGainsTax)
+        XCTAssertNil(result.netAfterCapitalGains)
+    }
+    
+    func testCapitalGainsWithLoss() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 120.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 120.0,
+            includeCapitalGains: true
+        )
+        
+        // When vest day price > VCD price, required sale price should be lower
+        // No capital gains tax should be applied since we're selling at a loss relative to vest day
+        XCTAssertEqual(result.requiredSalePrice, 87.13, accuracy: 0.01)
+        XCTAssertNil(result.capitalGainsTax)
+        XCTAssertNil(result.netAfterCapitalGains)
+    }
+    
+    func testCapitalGainsTaxRateCalculation() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.32, // Higher federal rate
+            stateRate: 0.093,  // Higher state rate
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true
+        )
+        
+        // With high tax rates, required sale price is below vest day price
+        // So no capital gains tax should be applied
+        XCTAssertEqual(result.requiredSalePrice, 68.07, accuracy: 0.01)
+        XCTAssertNil(result.capitalGainsTax)
+        XCTAssertNil(result.netAfterCapitalGains)
+    }
+    
+    func testCapitalGainsWithZeroStateTax() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.0, // No state tax
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true
+        )
+        
+        // Capital gains rate should be federal only = 22%
+        XCTAssertEqual(result.requiredSalePrice, 97.69, accuracy: 0.01)
+        XCTAssertNotNil(result.capitalGainsTax)
+        XCTAssertEqual(result.capitalGainsTax!, 291.92, accuracy: 0.01)
+    }
+    
+    func testCapitalGainsMathematicalConsistency() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true
+        )
+        
+        // Verify the mathematical relationships
+        let capitalGainsRate = 0.22 + 0.05 // federal + state
+        let profitPerShare = result.requiredSalePrice - 80.0
+        let expectedCapitalGainsTax = profitPerShare * capitalGainsRate * 75.0
+        
+        XCTAssertEqual(result.capitalGainsTax!, expectedCapitalGainsTax, accuracy: 0.01)
+        XCTAssertEqual(result.netAfterCapitalGains!, result.netIncomeTarget - result.capitalGainsTax!, accuracy: 0.01)
+    }
+    
+    func testCapitalGainsDisabled() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: false
+        )
+        
+        // Should be same as without capital gains flag
+        XCTAssertEqual(result.requiredSalePrice, 87.13, accuracy: 0.01)
+        XCTAssertNil(result.capitalGainsTax)
+        XCTAssertNil(result.netAfterCapitalGains)
+    }
+    
     // MARK: - Performance Tests
     
     func testPerformanceWithLargeNumbers() {
@@ -353,6 +498,22 @@ final class RSUCalculatorTests: XCTestCase {
                 stateRate: 0.05,
                 sharesSoldForTaxes: 25000,
                 taxSalePrice: 120.0
+            )
+        }
+    }
+    
+    func testPerformanceWithCapitalGains() {
+        measure {
+            _ = calculator.calculateRequiredSalePrice(
+                vcdPrice: 100.0,
+                vestingShares: 10000,
+                vestDayPrice: 80.0,
+                ficaRate: 0.0765,
+                federalRate: 0.22,
+                stateRate: 0.05,
+                sharesSoldForTaxes: 2500,
+                taxSalePrice: 80.0,
+                includeCapitalGains: true
             )
         }
     }

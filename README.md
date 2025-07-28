@@ -31,6 +31,7 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
 - `--state-rate, -t`: State tax rate (as decimal, e.g., 0.05 for 5%)
 - `--shares-sold-for-taxes, -x`: Number of shares sold for tax withholding
 - `--tax-sale-price, -a`: Price per share when sold for taxes
+- `--include-capital-gains, -c`: Include short-term capital gains tax calculation (uses federal tax rate)
 
 ### Example
 
@@ -43,13 +44,14 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
   --federal-rate 0.22 \
   --state-rate 0.05 \
   --shares-sold-for-taxes 25 \
-  --tax-sale-price 120.00
+  --tax-sale-price 120.00 \
+  --include-capital-gains
 ```
 
 Or using short options:
 
 ```bash
-./rsucalc -v 100.00 -s 100 -p 120.00 -f 0.0765 -r 0.22 -t 0.05 -x 25 -a 120.00
+./rsucalc -v 100.00 -s 100 -p 120.00 -f 0.0765 -r 0.22 -t 0.05 -x 25 -a 120.00 -c
 ```
 
 ## How It Works
@@ -78,6 +80,18 @@ Common tax rates (enter as decimals):
 - **FICA**: 7.65% = 0.0765
 - **Federal**: 22% = 0.22, 24% = 0.24, 32% = 0.32
 - **State**: 5% = 0.05, 9.3% = 0.093
+- **Capital Gains**: Uses your federal + state tax rates (short-term capital gains are taxed at marginal federal income tax rate + state tax rate)
+
+### Capital Gains Tax
+
+The calculator can account for short-term capital gains tax when the required sale price is higher than the vest day price. This is important because:
+
+- **Cost basis**: Vest day price (not VCD price)
+- **Capital gain**: Sale price - Vest day price
+- **Tax rate**: Uses your marginal federal income tax rate + state tax rate
+- **Tax impact**: Can significantly increase the required sale price
+
+Use the `--include-capital-gains` flag when you expect to sell above the vest day price.
 
 ## Use Cases
 
@@ -112,13 +126,16 @@ The test suite covers:
 - ✅ Input validation
 - ✅ Mathematical consistency
 - ✅ Performance with large datasets
+- ✅ Capital gains tax calculations (federal + state rates)
+- ✅ Capital gains edge cases (no profit, losses, zero state tax)
+- ✅ Capital gains mathematical consistency
 
 ### Test Results
 
 All tests should pass with 0 failures:
 ```
 Test Suite 'RSUCalculatorTests' passed
-Executed 19 tests, with 0 failures
+Executed 27 tests, with 0 failures
 ```
 
 ## Requirements

@@ -9,6 +9,8 @@ struct RSUCalculationResult {
     let sharesAfterTaxSale: Int
     let taxSaleProceeds: Double
     let requiredSalePrice: Double
+    let capitalGainsTax: Double?
+    let netAfterCapitalGains: Double?
 }
 
 final class RSUCalculator {
@@ -26,7 +28,8 @@ final class RSUCalculator {
         federalRate: Double,
         stateRate: Double,
         sharesSoldForTaxes: Int,
-        taxSalePrice: Double
+        taxSalePrice: Double,
+        includeCapitalGains: Bool = false
     ) -> RSUCalculationResult {
         
         // Step 1: Calculate gross income using VCD price (baseline scenario)
@@ -53,7 +56,34 @@ final class RSUCalculator {
         // Step 8: Calculate required sale price for remaining shares
         // Formula: Target Net Income / Remaining Shares
         // Note: Tax sale proceeds don't go to the user's bank account, so we don't subtract them
-        let requiredSalePrice = sharesAfterTaxSale > 0 ? netIncomeTarget / Double(sharesAfterTaxSale) : 0.0
+        var requiredSalePrice = sharesAfterTaxSale > 0 ? netIncomeTarget / Double(sharesAfterTaxSale) : 0.0
+        
+        // Step 9: Adjust for capital gains tax if applicable
+        if includeCapitalGains && requiredSalePrice > vestDayPrice {
+            // If sale price > vest day price, there's a capital gain
+            // Short-term capital gains are taxed at your marginal federal income tax rate + state tax rate
+            let capitalGainsRate = federalRate + stateRate
+            
+            // We need to account for capital gains tax on the profit
+            // Simple approach: targetNetPerShare = salePrice - (salePrice - vestDayPrice) * capitalGainsRate
+            // Solving for salePrice: salePrice = (targetNetPerShare - vestDayPrice * capitalGainsRate) / (1 - capitalGainsRate)
+            let targetNetPerShare = netIncomeTarget / Double(sharesAfterTaxSale)
+            requiredSalePrice = (targetNetPerShare - vestDayPrice * capitalGainsRate) / (1 - capitalGainsRate)
+        }
+        
+        // Calculate capital gains tax if applicable
+        let capitalGainsTax: Double?
+        let netAfterCapitalGains: Double?
+        
+        if includeCapitalGains && requiredSalePrice > vestDayPrice {
+            let profitPerShare = requiredSalePrice - vestDayPrice
+            let capitalGainsRate = federalRate + stateRate
+            capitalGainsTax = profitPerShare * capitalGainsRate * Double(sharesAfterTaxSale)
+            netAfterCapitalGains = netIncomeTarget - capitalGainsTax!
+        } else {
+            capitalGainsTax = nil
+            netAfterCapitalGains = nil
+        }
         
         return RSUCalculationResult(
             grossIncomeVCD: grossIncomeVCD,
@@ -63,7 +93,9 @@ final class RSUCalculator {
             netIncomeTarget: netIncomeTarget,
             sharesAfterTaxSale: sharesAfterTaxSale,
             taxSaleProceeds: taxSaleProceeds,
-            requiredSalePrice: requiredSalePrice
+            requiredSalePrice: requiredSalePrice,
+            capitalGainsTax: capitalGainsTax,
+            netAfterCapitalGains: netAfterCapitalGains
         )
     }
     
