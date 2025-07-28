@@ -34,6 +34,9 @@ struct RSURunner: ParsableCommand {
     
     @Flag(name: [.customShort("c"), .customLong("include-capital-gains")], help: "Include short-term capital gains tax calculation (uses federal tax rate)")
     var includeCapitalGains: Bool = false
+        
+    @Flag(name: [.customShort("n"), .customLong("include-net-investment-tax")], help: "Include 3.8% Net Investment Income Tax (NIIT) on capital gains for high-income earners")
+    var includeNetInvestmentTax: Bool = false
     
     mutating func run() throws {
         let calculator = RSUCalculator()
@@ -46,7 +49,8 @@ struct RSURunner: ParsableCommand {
             stateRate: stateRate,
             sharesSoldForTaxes: sharesSoldForTaxes,
             taxSalePrice: taxSalePrice,
-            includeCapitalGains: includeCapitalGains
+            includeCapitalGains: includeCapitalGains,
+            includeNetInvestmentTax: includeNetInvestmentTax
         )
         
         print("\n📊 RSU Calculator Results")

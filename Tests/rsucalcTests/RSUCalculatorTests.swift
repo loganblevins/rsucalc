@@ -517,4 +517,172 @@ final class RSUCalculatorTests: XCTestCase {
             )
         }
     }
+    
+    // MARK: - Net Investment Income Tax Tests
+    
+    func testNetInvestmentTaxWithProfit() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: true
+        )
+        
+        XCTAssertNotNil(result.capitalGainsTax)
+        XCTAssertNotNil(result.netAfterCapitalGains)
+        
+        // Capital gains rate should be federal + state + NIIT = 22% + 5% + 3.8% = 30.8%
+        let expectedCapitalGainsRate = 0.22 + 0.05 + 0.038
+        let profitPerShare = result.requiredSalePrice - 80.0
+        let expectedCapitalGainsTax = profitPerShare * expectedCapitalGainsRate * 75.0
+        
+        XCTAssertEqual(result.capitalGainsTax!, expectedCapitalGainsTax, accuracy: 0.01)
+        XCTAssertEqual(result.netAfterCapitalGains!, 6535.0 - result.capitalGainsTax!, accuracy: 0.01)
+    }
+    
+    func testNetInvestmentTaxWithoutProfit() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.32,
+            stateRate: 0.093,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: true
+        )
+        
+        // Should be no capital gains tax since required sale price ≤ vest day price
+        XCTAssertNil(result.capitalGainsTax)
+        XCTAssertNil(result.netAfterCapitalGains)
+    }
+    
+    func testNetInvestmentTaxRateCalculation() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: true
+        )
+        
+        // Verify the required sale price is higher with NIIT than without
+        let resultWithoutNIIT = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: false
+        )
+        
+        XCTAssertGreaterThan(result.requiredSalePrice, resultWithoutNIIT.requiredSalePrice)
+        XCTAssertGreaterThan(result.capitalGainsTax!, resultWithoutNIIT.capitalGainsTax!)
+    }
+    
+    func testNetInvestmentTaxWithZeroStateTax() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.0,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: true
+        )
+        
+        // Capital gains rate should be federal + NIIT = 22% + 3.8% = 25.8%
+        let expectedCapitalGainsRate = 0.22 + 0.038
+        let profitPerShare = result.requiredSalePrice - 80.0
+        let expectedCapitalGainsTax = profitPerShare * expectedCapitalGainsRate * 75.0
+        
+        XCTAssertEqual(result.capitalGainsTax!, expectedCapitalGainsTax, accuracy: 0.01)
+    }
+    
+    func testNetInvestmentTaxDisabled() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: false
+        )
+        
+        // Should behave exactly like regular capital gains without NIIT
+        XCTAssertNotNil(result.capitalGainsTax)
+        XCTAssertNotNil(result.netAfterCapitalGains)
+        
+        // Capital gains rate should be federal + state = 22% + 5% = 27%
+        let expectedCapitalGainsRate = 0.22 + 0.05
+        let profitPerShare = result.requiredSalePrice - 80.0
+        let expectedCapitalGainsTax = profitPerShare * expectedCapitalGainsRate * 75.0
+        
+        XCTAssertEqual(result.capitalGainsTax!, expectedCapitalGainsTax, accuracy: 0.01)
+    }
+    
+    func testNetInvestmentTaxMathematicalConsistency() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            ficaRate: 0.0765,
+            federalRate: 0.22,
+            stateRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: true
+        )
+        
+        // Verify mathematical consistency
+        let profitPerShare = result.requiredSalePrice - 80.0
+        let capitalGainsRate = 0.22 + 0.05 + 0.038
+        let expectedCapitalGainsTax = profitPerShare * capitalGainsRate * 75.0
+        
+        XCTAssertEqual(result.capitalGainsTax!, expectedCapitalGainsTax, accuracy: 0.01)
+        XCTAssertEqual(result.netAfterCapitalGains!, 6535.0 - result.capitalGainsTax!, accuracy: 0.01)
+    }
+    
+    func testPerformanceWithNetInvestmentTax() {
+        measure {
+            let result = calculator.calculateRequiredSalePrice(
+                vcdPrice: 100.0,
+                vestingShares: 1000,
+                vestDayPrice: 80.0,
+                ficaRate: 0.0765,
+                federalRate: 0.22,
+                stateRate: 0.05,
+                sharesSoldForTaxes: 250,
+                taxSalePrice: 80.0,
+                includeCapitalGains: true,
+                includeNetInvestmentTax: true
+            )
+            XCTAssertNotNil(result)
+        }
+    }
 } 

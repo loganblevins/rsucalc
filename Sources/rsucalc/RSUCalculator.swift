@@ -29,7 +29,8 @@ final class RSUCalculator {
         stateRate: Double,
         sharesSoldForTaxes: Int,
         taxSalePrice: Double,
-        includeCapitalGains: Bool = false
+        includeCapitalGains: Bool = false,
+        includeNetInvestmentTax: Bool = false
     ) -> RSUCalculationResult {
         
         // Step 1: Calculate gross income using VCD price (baseline scenario)
@@ -62,7 +63,11 @@ final class RSUCalculator {
         if includeCapitalGains && requiredSalePrice > vestDayPrice {
             // If sale price > vest day price, there's a capital gain
             // Short-term capital gains are taxed at your marginal federal income tax rate + state tax rate
-            let capitalGainsRate = federalRate + stateRate
+            // High-income earners may also be subject to 3.8% Net Investment Income Tax (NIIT)
+            var capitalGainsRate = federalRate + stateRate
+            if includeNetInvestmentTax {
+                capitalGainsRate += 0.038 // 3.8% NIIT
+            }
             
             // We need to account for capital gains tax on the profit
             // Simple approach: targetNetPerShare = salePrice - (salePrice - vestDayPrice) * capitalGainsRate
@@ -77,7 +82,10 @@ final class RSUCalculator {
         
         if includeCapitalGains && requiredSalePrice > vestDayPrice {
             let profitPerShare = requiredSalePrice - vestDayPrice
-            let capitalGainsRate = federalRate + stateRate
+            var capitalGainsRate = federalRate + stateRate
+            if includeNetInvestmentTax {
+                capitalGainsRate += 0.038 // 3.8% NIIT
+            }
             capitalGainsTax = profitPerShare * capitalGainsRate * Double(sharesAfterTaxSale)
             netAfterCapitalGains = netIncomeTarget - capitalGainsTax!
         } else {
