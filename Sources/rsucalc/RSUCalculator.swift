@@ -26,7 +26,7 @@ final class RSUCalculator {
         vestDayPrice: Double,
         ficaRate: Double,
         federalRate: Double,
-        stateRate: Double,
+        saltRate: Double,
         sharesSoldForTaxes: Int,
         taxSalePrice: Double,
         includeCapitalGains: Bool = false,
@@ -40,7 +40,7 @@ final class RSUCalculator {
         let grossIncomeVestDay = Double(vestingShares) * vestDayPrice
         
         // Step 3: Calculate total tax rate
-        let totalTaxRate = ficaRate + federalRate + stateRate
+        let totalTaxRate = ficaRate + federalRate + saltRate
         
         // Step 4: Calculate tax amount based on vest day price
         let taxAmount = grossIncomeVestDay * totalTaxRate
@@ -62,9 +62,9 @@ final class RSUCalculator {
         // Step 9: Adjust for capital gains tax if applicable
         if includeCapitalGains && requiredSalePrice > vestDayPrice {
             // If sale price > vest day price, there's a capital gain
-            // Short-term capital gains are taxed at your marginal federal income tax rate + state tax rate
+            // Short-term capital gains are taxed at your marginal federal income tax rate + SALT rate
             // High-income earners may also be subject to 3.8% Net Investment Income Tax (NIIT)
-            var capitalGainsRate = federalRate + stateRate
+            var capitalGainsRate = federalRate + saltRate
             if includeNetInvestmentTax {
                 capitalGainsRate += 0.038 // 3.8% NIIT
             }
@@ -82,7 +82,7 @@ final class RSUCalculator {
         
         if includeCapitalGains && requiredSalePrice > vestDayPrice {
             let profitPerShare = requiredSalePrice - vestDayPrice
-            var capitalGainsRate = federalRate + stateRate
+            var capitalGainsRate = federalRate + saltRate
             if includeNetInvestmentTax {
                 capitalGainsRate += 0.038 // 3.8% NIIT
             }
@@ -114,7 +114,7 @@ final class RSUCalculator {
         vestDayPrice: Double,
         ficaRate: Double,
         federalRate: Double,
-        stateRate: Double,
+        saltRate: Double,
         sharesSoldForTaxes: Int,
         taxSalePrice: Double
     ) -> [String] {
@@ -140,8 +140,8 @@ final class RSUCalculator {
             errors.append("Federal tax rate must be between 0 and 1")
         }
         
-        if stateRate < 0 || stateRate > 1 {
-            errors.append("State tax rate must be between 0 and 1")
+        if saltRate < 0 || saltRate > 1 {
+            errors.append("SALT rate must be between 0 and 1")
         }
         
         if sharesSoldForTaxes < 0 {
@@ -156,7 +156,7 @@ final class RSUCalculator {
             errors.append("Tax sale price must be positive")
         }
         
-        let totalTaxRate = ficaRate + federalRate + stateRate
+        let totalTaxRate = ficaRate + federalRate + saltRate
         if totalTaxRate > 1 {
             errors.append("Total tax rate cannot exceed 100%")
         }

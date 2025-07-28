@@ -25,7 +25,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 100.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 100.0
         )
@@ -48,7 +48,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 83.04,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.0,
+            saltRate: 0.0,
             sharesSoldForTaxes: 193,
             taxSalePrice: 70.3279
         )
@@ -65,14 +65,14 @@ final class RSUCalculatorTests: XCTestCase {
     
     // MARK: - Edge Cases
     
-    func testZeroStateTax() {
+    func testZeroSALTTax() {
         let result = calculator.calculateRequiredSalePrice(
             vcdPrice: 100.0,
             vestingShares: 100,
             vestDayPrice: 120.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.0,
+            saltRate: 0.0,
             sharesSoldForTaxes: 20,
             taxSalePrice: 120.0
         )
@@ -88,7 +88,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 100.0,
             ficaRate: 0.0765,
             federalRate: 0.37,
-            stateRate: 0.13,
+            saltRate: 0.13,
             sharesSoldForTaxes: 50,
             taxSalePrice: 100.0
         )
@@ -104,7 +104,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 100.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 100,
             taxSalePrice: 100.0
         )
@@ -122,7 +122,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 100.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 0,
             taxSalePrice: 100.0
         )
@@ -139,7 +139,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 150.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 150.0
         )
@@ -156,7 +156,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0
         )
@@ -175,7 +175,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 60.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 2500,
             taxSalePrice: 60.0
         )
@@ -193,7 +193,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 1200.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 1200.0
         )
@@ -212,7 +212,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 83.04,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.0,
+            saltRate: 0.0,
             sharesSoldForTaxes: 193,
             taxSalePrice: 70.3279
         )
@@ -231,7 +231,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 120.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 120.0
         )
@@ -246,7 +246,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 120.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 120.0
         )
@@ -261,7 +261,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 120.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 120.0
         )
@@ -276,7 +276,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 120.0,
             ficaRate: 1.5, // Invalid: > 1
             federalRate: -0.1, // Invalid: < 0
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 120.0
         )
@@ -292,7 +292,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 120.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 150, // More than vesting shares
             taxSalePrice: 120.0
         )
@@ -307,7 +307,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 120.0,
             ficaRate: 0.5,
             federalRate: 0.4,
-            stateRate: 0.2, // Total = 110%
+            saltRate: 0.2, // Total = 110%
             sharesSoldForTaxes: 25,
             taxSalePrice: 120.0
         )
@@ -324,7 +324,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 120.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 120.0
         )
@@ -349,7 +349,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true
@@ -373,7 +373,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 100.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 100.0,
             includeCapitalGains: true
@@ -392,7 +392,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 120.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 120.0,
             includeCapitalGains: true
@@ -412,7 +412,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.32, // Higher federal rate
-            stateRate: 0.093,  // Higher state rate
+            saltRate: 0.093,  // Higher SALT rate
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true
@@ -425,20 +425,20 @@ final class RSUCalculatorTests: XCTestCase {
         XCTAssertNil(result.netAfterCapitalGains)
     }
     
-    func testCapitalGainsWithZeroStateTax() {
+    func testCapitalGainsWithZeroSALTTax() {
         let result = calculator.calculateRequiredSalePrice(
             vcdPrice: 100.0,
             vestingShares: 100,
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.0, // No state tax
+            saltRate: 0.0, // No SALT
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true
         )
         
-        // Capital gains rate should be federal only = 22%
+        // Capital gains rate should be federal only = 22% (no SALT)
         XCTAssertEqual(result.requiredSalePrice, 97.69, accuracy: 0.01)
         XCTAssertNotNil(result.capitalGainsTax)
         XCTAssertEqual(result.capitalGainsTax!, 291.92, accuracy: 0.01)
@@ -451,7 +451,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true
@@ -473,7 +473,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: false
@@ -495,7 +495,7 @@ final class RSUCalculatorTests: XCTestCase {
                 vestDayPrice: 120.0,
                 ficaRate: 0.0765,
                 federalRate: 0.22,
-                stateRate: 0.05,
+                saltRate: 0.05,
                 sharesSoldForTaxes: 25000,
                 taxSalePrice: 120.0
             )
@@ -510,7 +510,7 @@ final class RSUCalculatorTests: XCTestCase {
                 vestDayPrice: 80.0,
                 ficaRate: 0.0765,
                 federalRate: 0.22,
-                stateRate: 0.05,
+                saltRate: 0.05,
                 sharesSoldForTaxes: 2500,
                 taxSalePrice: 80.0,
                 includeCapitalGains: true
@@ -527,7 +527,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true,
@@ -553,7 +553,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.32,
-            stateRate: 0.093,
+            saltRate: 0.093,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true,
@@ -572,7 +572,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true,
@@ -586,7 +586,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true,
@@ -597,21 +597,21 @@ final class RSUCalculatorTests: XCTestCase {
         XCTAssertGreaterThan(result.capitalGainsTax!, resultWithoutNIIT.capitalGainsTax!)
     }
     
-    func testNetInvestmentTaxWithZeroStateTax() {
+    func testNetInvestmentTaxWithZeroSALTTax() {
         let result = calculator.calculateRequiredSalePrice(
             vcdPrice: 100.0,
             vestingShares: 100,
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.0,
+            saltRate: 0.0,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true,
             includeNetInvestmentTax: true
         )
         
-        // Capital gains rate should be federal + NIIT = 22% + 3.8% = 25.8%
+        // Capital gains rate should be federal + NIIT = 22% + 3.8% = 25.8% (no SALT)
         let expectedCapitalGainsRate = 0.22 + 0.038
         let profitPerShare = result.requiredSalePrice - 80.0
         let expectedCapitalGainsTax = profitPerShare * expectedCapitalGainsRate * 75.0
@@ -626,7 +626,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true,
@@ -652,7 +652,7 @@ final class RSUCalculatorTests: XCTestCase {
             vestDayPrice: 80.0,
             ficaRate: 0.0765,
             federalRate: 0.22,
-            stateRate: 0.05,
+            saltRate: 0.05,
             sharesSoldForTaxes: 25,
             taxSalePrice: 80.0,
             includeCapitalGains: true,
@@ -676,7 +676,7 @@ final class RSUCalculatorTests: XCTestCase {
                 vestDayPrice: 80.0,
                 ficaRate: 0.0765,
                 federalRate: 0.22,
-                stateRate: 0.05,
+                saltRate: 0.05,
                 sharesSoldForTaxes: 250,
                 taxSalePrice: 80.0,
                 includeCapitalGains: true,

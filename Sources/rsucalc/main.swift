@@ -23,8 +23,8 @@ struct RSURunner: ParsableCommand {
     @Option(name: [.customShort("r"), .customLong("federal-rate")], help: "Federal tax rate (as decimal, e.g., 0.22 for 22%)")
     var federalRate: Double
     
-    @Option(name: [.customShort("t"), .customLong("state-rate")], help: "State tax rate (as decimal, e.g., 0.05 for 5%)")
-    var stateRate: Double
+    @Option(name: [.customShort("t"), .customLong("salt-rate")], help: "SALT (State and Local Tax) rate (as decimal, e.g., 0.05 for 5%)")
+    var saltRate: Double
     
     @Option(name: [.customShort("x"), .customLong("shares-sold-for-taxes")], help: "Number of shares sold for tax withholding")
     var sharesSoldForTaxes: Int
@@ -46,7 +46,7 @@ struct RSURunner: ParsableCommand {
             vestDayPrice: vestDayPrice,
             ficaRate: ficaRate,
             federalRate: federalRate,
-            stateRate: stateRate,
+            saltRate: saltRate,
             sharesSoldForTaxes: sharesSoldForTaxes,
             taxSalePrice: taxSalePrice,
             includeCapitalGains: includeCapitalGains,
@@ -62,7 +62,7 @@ struct RSURunner: ParsableCommand {
         print("   Vest Day Price: $\(String(format: "%.2f", vestDayPrice))")
         print("   FICA Rate: \(String(format: "%.1f", ficaRate * 100))%")
         print("   Federal Rate: \(String(format: "%.1f", federalRate * 100))%")
-        print("   State Rate: \(String(format: "%.1f", stateRate * 100))%")
+        print("   SALT Rate: \(String(format: "%.1f", saltRate * 100))%")
         print("   Shares Sold for Taxes: \(sharesSoldForTaxes)")
         print("   Tax Sale Price: $\(String(format: "%.2f", taxSalePrice))")
         

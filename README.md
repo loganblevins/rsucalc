@@ -28,10 +28,10 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
 - `--vest-day-price, -p`: Share price on vest day
 - `--fica-rate, -f`: FICA tax rate (as decimal, e.g., 0.0765 for 7.65%)
 - `--federal-rate, -r`: Federal tax rate (as decimal, e.g., 0.22 for 22%)
-- `--state-rate, -t`: State tax rate (as decimal, e.g., 0.05 for 5%)
+- `--salt-rate, -t`: SALT (State and Local Tax) rate (as decimal, e.g., 0.05 for 5%)
 - `--shares-sold-for-taxes, -x`: Number of shares sold for tax withholding
 - `--tax-sale-price, -a`: Price per share when sold for taxes
-- `--include-capital-gains, -c`: Include short-term capital gains tax calculation (uses federal + state tax rates)
+- `--include-capital-gains, -c`: Include short-term capital gains tax calculation (uses federal + SALT rates)
 - `--include-net-investment-tax, -n`: Include 3.8% Net Investment Income Tax (NIIT) on capital gains for high-income earners
 
 ### Example
@@ -43,7 +43,7 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
   --vest-day-price 120.00 \
   --fica-rate 0.0765 \
   --federal-rate 0.22 \
-  --state-rate 0.05 \
+  --salt-rate 0.05 \
   --shares-sold-for-taxes 25 \
   --tax-sale-price 120.00 \
   --include-capital-gains \
@@ -81,8 +81,8 @@ Common tax rates (enter as decimals):
 
 - **FICA**: 7.65% = 0.0765
 - **Federal**: 22% = 0.22, 24% = 0.24, 32% = 0.32
-- **State**: 5% = 0.05, 9.3% = 0.093
-- **Capital Gains**: Uses your federal + state tax rates (short-term capital gains are taxed at marginal federal income tax rate + state tax rate)
+- **SALT**: 5% = 0.05, 9.3% = 0.093
+- **Capital Gains**: Uses your federal + SALT rates (short-term capital gains are taxed at marginal federal income tax rate + SALT rate)
 
 ### Capital Gains Tax
 
@@ -90,7 +90,7 @@ The calculator can account for short-term capital gains tax when the required sa
 
 - **Cost basis**: Vest day price (not VCD price)
 - **Capital gain**: Sale price - Vest day price
-- **Tax rate**: Uses your marginal federal income tax rate + state tax rate
+- **Tax rate**: Uses your marginal federal income tax rate + SALT rate
 - **Tax impact**: Can significantly increase the required sale price
 
 Use the `--include-capital-gains` flag when you expect to sell above the vest day price.
@@ -100,9 +100,9 @@ Use the `--include-capital-gains` flag when you expect to sell above the vest da
 High-income earners may be subject to an additional 3.8% Net Investment Income Tax (NIIT) on capital gains. The calculator can include this tax:
 
 - **When it applies**: Only when capital gains are present (sale price > vest day price)
-- **Tax rate**: Additional 3.8% on top of federal + state capital gains rates
-- **Total rate**: Federal rate + State rate + 3.8% NIIT
-- **Example**: 22% federal + 5% state + 3.8% NIIT = 30.8% total capital gains rate
+- **Tax rate**: Additional 3.8% on top of federal + SALT capital gains rates
+- **Total rate**: Federal rate + SALT rate + 3.8% NIIT
+- **Example**: 22% federal + 5% SALT + 3.8% NIIT = 30.8% total capital gains rate
 
 Use the `--include-net-investment-tax` flag along with `--include-capital-gains` for high-income earners.
 
@@ -136,8 +136,8 @@ The test suite covers:
 - ✅ Input validation
 - ✅ Mathematical consistency
 - ✅ Performance with large datasets
-- ✅ Capital gains tax calculations (federal + state rates)
-- ✅ Capital gains edge cases (no profit, losses, zero state tax)
+- ✅ Capital gains tax calculations (federal + SALT rates)
+- ✅ Capital gains edge cases (no profit, losses, zero SALT)
 - ✅ Capital gains mathematical consistency
 - ✅ Net Investment Income Tax (NIIT) calculations
 - ✅ NIIT with various tax rate combinations
