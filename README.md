@@ -27,7 +27,7 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
 - `--vesting-shares, -s`: Number of shares vesting
 - `--vest-day-price, -p`: Share price on vest day
 - `--medicare-rate, -m`: Medicare tax rate (as decimal, e.g., 0.0145 for 1.45%)
-- `--social-security-rate, -s`: Social Security tax rate (as decimal, e.g., 0.062 for 6.2%)
+- `--social-security-rate, -o`: Social Security tax rate (as decimal, e.g., 0.062 for 6.2%)
 - `--federal-rate, -r`: Federal tax rate (as decimal, e.g., 0.22 for 22%)
 - `--salt-rate, -t`: SALT (State and Local Tax) rate (as decimal, e.g., 0.05 for 5%)
 - `--shares-sold-for-taxes, -x`: Number of shares sold for tax withholding
