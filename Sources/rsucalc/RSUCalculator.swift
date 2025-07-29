@@ -24,7 +24,8 @@ final class RSUCalculator {
         vcdPrice: Double,
         vestingShares: Int,
         vestDayPrice: Double,
-        ficaRate: Double,
+        medicareRate: Double,
+        socialSecurityRate: Double,
         federalRate: Double,
         saltRate: Double,
         sharesSoldForTaxes: Int,
@@ -39,11 +40,17 @@ final class RSUCalculator {
         // Step 2: Calculate gross income using actual vest day price
         let grossIncomeVestDay = Double(vestingShares) * vestDayPrice
         
-        // Step 3: Calculate total tax rate
-        let totalTaxRate = ficaRate + federalRate + saltRate
+        // Step 3: Calculate total tax rate using precise individual components
+        // Federal: 22%, Social Security: 6.2%, Medicare: 1.45%, SALT: varies
+        let federalTax = ceil(grossIncomeVestDay * federalRate * 100) / 100
+        let socialSecurityTax = ceil(grossIncomeVestDay * socialSecurityRate * 100) / 100
+        let medicareTax = ceil(grossIncomeVestDay * medicareRate * 100) / 100
+        let saltTax = ceil(grossIncomeVestDay * saltRate * 100) / 100
+        let totalTaxAmount = federalTax + socialSecurityTax + medicareTax + saltTax
+        let totalTaxRate = totalTaxAmount / grossIncomeVestDay
         
-        // Step 4: Calculate tax amount based on vest day price
-        let taxAmount = grossIncomeVestDay * totalTaxRate
+        // Step 4: Calculate tax amount based on vest day price using precise components
+        let taxAmount = totalTaxAmount
         
         // Step 5: Calculate target net income (what you would get if vest day price = VCD price)
         let netIncomeTarget = grossIncomeVCD - (grossIncomeVCD * totalTaxRate)
@@ -117,7 +124,8 @@ final class RSUCalculator {
         vcdPrice: Double,
         vestingShares: Int,
         vestDayPrice: Double,
-        ficaRate: Double,
+        medicareRate: Double,
+        socialSecurityRate: Double,
         federalRate: Double,
         saltRate: Double,
         sharesSoldForTaxes: Int,
@@ -137,8 +145,12 @@ final class RSUCalculator {
             errors.append("Vest day price must be positive")
         }
         
-        if ficaRate < 0 || ficaRate > 1 {
-            errors.append("FICA rate must be between 0 and 1")
+        if medicareRate < 0 || medicareRate > 1 {
+            errors.append("Medicare rate must be between 0 and 1")
+        }
+        
+        if socialSecurityRate < 0 || socialSecurityRate > 1 {
+            errors.append("Social Security rate must be between 0 and 1")
         }
         
         if federalRate < 0 || federalRate > 1 {
@@ -161,7 +173,7 @@ final class RSUCalculator {
             errors.append("Tax sale price must be positive")
         }
         
-        let totalTaxRate = ficaRate + federalRate + saltRate
+        let totalTaxRate = medicareRate + socialSecurityRate + federalRate + saltRate
         if totalTaxRate > 1 {
             errors.append("Total tax rate cannot exceed 100%")
         }

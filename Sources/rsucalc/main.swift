@@ -17,8 +17,11 @@ struct RSURunner: ParsableCommand {
     @Option(name: [.customShort("p"), .customLong("vest-day-price")], help: "Share price on vest day")
     var vestDayPrice: Double
     
-    @Option(name: [.customShort("f"), .customLong("fica-rate")], help: "FICA tax rate (as decimal, e.g., 0.0765 for 7.65%)")
-    var ficaRate: Double
+    @Option(name: [.customShort("m"), .customLong("medicare-rate")], help: "Medicare tax rate (as decimal, e.g., 0.0145 for 1.45%)")
+    var medicareRate: Double
+    
+    @Option(name: [.customShort("s"), .customLong("social-security-rate")], help: "Social Security tax rate (as decimal, e.g., 0.062 for 6.2%)")
+    var socialSecurityRate: Double
     
     @Option(name: [.customShort("r"), .customLong("federal-rate")], help: "Federal tax rate (as decimal, e.g., 0.22 for 22%)")
     var federalRate: Double
@@ -44,7 +47,8 @@ struct RSURunner: ParsableCommand {
             vcdPrice: vcdPrice,
             vestingShares: vestingShares,
             vestDayPrice: vestDayPrice,
-            ficaRate: ficaRate,
+            medicareRate: medicareRate,
+            socialSecurityRate: socialSecurityRate,
             federalRate: federalRate,
             saltRate: saltRate,
             sharesSoldForTaxes: sharesSoldForTaxes,
@@ -60,7 +64,8 @@ struct RSURunner: ParsableCommand {
         print("   VCD Price: $\(String(format: "%.2f", vcdPrice))")
         print("   Vesting Shares: \(vestingShares)")
         print("   Vest Day Price: $\(String(format: "%.2f", vestDayPrice))")
-        print("   FICA Rate: \(String(format: "%.1f", ficaRate * 100))%")
+        print("   Medicare Rate: \(String(format: "%.1f", medicareRate * 100))%")
+        print("   Social Security Rate: \(String(format: "%.1f", socialSecurityRate * 100))%")
         print("   Federal Rate: \(String(format: "%.1f", federalRate * 100))%")
         print("   SALT Rate: \(String(format: "%.1f", saltRate * 100))%")
         print("   Shares Sold for Taxes: \(sharesSoldForTaxes)")
