@@ -146,14 +146,6 @@ The test suite covers:
 - ✅ NIIT with various tax rate combinations
 - ✅ NIIT mathematical consistency and performance
 
-### Test Results
-
-All tests should pass with 0 failures:
-```
-Test Suite 'RSUCalculatorTests' passed
-Executed 34 tests, with 0 failures
-```
-
 ## Requirements
 
 - macOS 13.0 or later
