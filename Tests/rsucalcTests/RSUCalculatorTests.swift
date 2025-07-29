@@ -398,9 +398,7 @@ final class RSUCalculatorTests: XCTestCase {
         XCTAssertEqual(result.sharesAfterTaxSale, 75)
         XCTAssertEqual(result.requiredSalePrice, 103.87, accuracy: 0.01)
         XCTAssertNotNil(result.capitalGainsTax)
-        XCTAssertNotNil(result.netAfterCapitalGains)
         XCTAssertEqual(result.capitalGainsTax!, 483.41, accuracy: 0.01)
-        XCTAssertEqual(result.netAfterCapitalGains!, 6823.59, accuracy: 0.01)
     }
     
     func testCapitalGainsWithoutProfit() {
@@ -420,7 +418,6 @@ final class RSUCalculatorTests: XCTestCase {
         // When vest day price = VCD price, required sale price should be same as without capital gains
         XCTAssertEqual(result.requiredSalePrice, 100.0, accuracy: 0.01)
         XCTAssertNil(result.capitalGainsTax)
-        XCTAssertNil(result.netAfterCapitalGains)
     }
     
     func testCapitalGainsWithLoss() {
@@ -441,7 +438,6 @@ final class RSUCalculatorTests: XCTestCase {
         // No capital gains tax should be applied since we're selling at a loss relative to vest day
         XCTAssertEqual(result.requiredSalePrice, 102.57, accuracy: 0.01)
         XCTAssertNil(result.capitalGainsTax)
-        XCTAssertNil(result.netAfterCapitalGains)
     }
     
     func testCapitalGainsTaxRateCalculation() {
@@ -462,9 +458,7 @@ final class RSUCalculatorTests: XCTestCase {
         // So capital gains tax should be applied
         XCTAssertEqual(result.requiredSalePrice, 103.19, accuracy: 0.01)
         XCTAssertNotNil(result.capitalGainsTax)
-        XCTAssertNotNil(result.netAfterCapitalGains)
         XCTAssertEqual(result.capitalGainsTax!, 718.35, accuracy: 0.01)
-        XCTAssertEqual(result.netAfterCapitalGains!, 6302.65, accuracy: 0.01)
     }
     
     func testCapitalGainsWithZeroSALTTax() {
@@ -507,7 +501,6 @@ final class RSUCalculatorTests: XCTestCase {
         let expectedCapitalGainsTax = profitPerShare * capitalGainsRate * 75.0
         
         XCTAssertEqual(result.capitalGainsTax!, expectedCapitalGainsTax, accuracy: 0.01)
-        XCTAssertEqual(result.netAfterCapitalGains!, result.netIncomeTarget - result.capitalGainsTax!, accuracy: 0.01)
     }
     
     func testCapitalGainsDisabled() {
@@ -527,7 +520,6 @@ final class RSUCalculatorTests: XCTestCase {
         // Should be same as without capital gains flag
         XCTAssertEqual(result.requiredSalePrice, 97.43, accuracy: 0.01)
         XCTAssertNil(result.capitalGainsTax)
-        XCTAssertNil(result.netAfterCapitalGains)
     }
     
     // MARK: - Performance Tests
@@ -583,7 +575,6 @@ final class RSUCalculatorTests: XCTestCase {
         )
         
         XCTAssertNotNil(result.capitalGainsTax)
-        XCTAssertNotNil(result.netAfterCapitalGains)
         
         // Capital gains rate should be federal + state + NIIT = 22% + 5% + 3.8% = 30.8%
         let expectedCapitalGainsRate = 0.22 + 0.05 + 0.038
@@ -591,7 +582,6 @@ final class RSUCalculatorTests: XCTestCase {
         let expectedCapitalGainsTax = profitPerShare * expectedCapitalGainsRate * 75.0
         
         XCTAssertEqual(result.capitalGainsTax!, expectedCapitalGainsTax, accuracy: 0.01)
-        XCTAssertEqual(result.netAfterCapitalGains!, 7307.0 - result.capitalGainsTax!, accuracy: 0.01)
     }
     
     func testNetInvestmentTaxWithoutProfit() {
@@ -612,9 +602,7 @@ final class RSUCalculatorTests: XCTestCase {
         // With high tax rates, required sale price is above vest day price
         // So capital gains tax should be applied
         XCTAssertNotNil(result.capitalGainsTax)
-        XCTAssertNotNil(result.netAfterCapitalGains)
         XCTAssertEqual(result.capitalGainsTax!, 838.74, accuracy: 0.01)
-        XCTAssertEqual(result.netAfterCapitalGains!, 6182.26, accuracy: 0.01)
     }
     
     func testNetInvestmentTaxRateCalculation() {
@@ -691,7 +679,6 @@ final class RSUCalculatorTests: XCTestCase {
         
         // Should behave exactly like regular capital gains without NIIT
         XCTAssertNotNil(result.capitalGainsTax)
-        XCTAssertNotNil(result.netAfterCapitalGains)
         
         // Capital gains rate should be federal + state = 22% + 5% = 27%
         let expectedCapitalGainsRate = 0.22 + 0.05
@@ -722,7 +709,6 @@ final class RSUCalculatorTests: XCTestCase {
         let expectedCapitalGainsTax = profitPerShare * capitalGainsRate * 75.0
         
         XCTAssertEqual(result.capitalGainsTax!, expectedCapitalGainsTax, accuracy: 0.01)
-        XCTAssertEqual(result.netAfterCapitalGains!, 7307.0 - result.capitalGainsTax!, accuracy: 0.01)
     }
     
     func testPerformanceWithNetInvestmentTax() {

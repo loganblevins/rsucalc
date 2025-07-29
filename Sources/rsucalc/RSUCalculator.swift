@@ -10,7 +10,6 @@ struct RSUCalculationResult {
     let taxSaleProceeds: Double
     let requiredSalePrice: Double
     let capitalGainsTax: Double?
-    let netAfterCapitalGains: Double?
 }
 
 final class RSUCalculator {
@@ -42,10 +41,11 @@ final class RSUCalculator {
         
         // Step 3: Calculate total tax rate using precise individual components
         // Federal: 22%, Social Security: 6.2%, Medicare: 1.45%, SALT: varies
-        let federalTax = ceil(grossIncomeVestDay * federalRate * 100) / 100
-        let socialSecurityTax = ceil(grossIncomeVestDay * socialSecurityRate * 100) / 100
-        let medicareTax = ceil(grossIncomeVestDay * medicareRate * 100) / 100
-        let saltTax = ceil(grossIncomeVestDay * saltRate * 100) / 100
+        // Note: Using round() to match actual withholding behavior (rounds to nearest cent)
+        let federalTax = round(grossIncomeVestDay * federalRate * 100) / 100
+        let socialSecurityTax = round(grossIncomeVestDay * socialSecurityRate * 100) / 100
+        let medicareTax = round(grossIncomeVestDay * medicareRate * 100) / 100
+        let saltTax = round(grossIncomeVestDay * saltRate * 100) / 100
         let totalTaxAmount = federalTax + socialSecurityTax + medicareTax + saltTax
         let totalTaxRate = totalTaxAmount / grossIncomeVestDay
         
@@ -90,7 +90,6 @@ final class RSUCalculator {
         
         // Calculate capital gains tax if applicable
         let capitalGainsTax: Double?
-        let netAfterCapitalGains: Double?
         
         if includeCapitalGains && requiredSalePrice > vestDayPrice {
             let profitPerShare = requiredSalePrice - vestDayPrice
@@ -99,10 +98,8 @@ final class RSUCalculator {
                 capitalGainsRate += 0.038 // 3.8% NIIT
             }
             capitalGainsTax = profitPerShare * capitalGainsRate * Double(sharesAfterTaxSale)
-            netAfterCapitalGains = adjustedNetIncomeTarget - capitalGainsTax!
         } else {
             capitalGainsTax = nil
-            netAfterCapitalGains = nil
         }
         
         return RSUCalculationResult(
@@ -114,8 +111,7 @@ final class RSUCalculator {
             sharesAfterTaxSale: sharesAfterTaxSale,
             taxSaleProceeds: taxSaleProceeds,
             requiredSalePrice: requiredSalePrice,
-            capitalGainsTax: capitalGainsTax,
-            netAfterCapitalGains: netAfterCapitalGains
+            capitalGainsTax: capitalGainsTax
         )
     }
     

@@ -76,6 +76,11 @@ struct RSURunner: ParsableCommand {
         print("   Gross Income (Vest Day): $\(String(format: "%.2f", result.grossIncomeVestDay))")
         print("   Total Tax Rate: \(String(format: "%.1f", result.totalTaxRate * 100))%")
         print("   Tax Amount: $\(String(format: "%.2f", result.taxAmount))")
+        print("   📊 Individual Tax Components:")
+        print("      Federal Tax (22%): $\(String(format: "%.2f", round(result.grossIncomeVestDay * federalRate * 100) / 100))")
+        print("      Social Security Tax (6.2%): $\(String(format: "%.2f", round(result.grossIncomeVestDay * socialSecurityRate * 100) / 100))")
+        print("      Medicare Tax (1.45%): $\(String(format: "%.2f", round(result.grossIncomeVestDay * medicareRate * 100) / 100))")
+        print("      SALT Tax (\(String(format: "%.1f", saltRate * 100))%): $\(String(format: "%.2f", round(result.grossIncomeVestDay * saltRate * 100) / 100))")
         print("   Tax Sale Proceeds: $\(String(format: "%.2f", result.taxSaleProceeds))")
         print("   💰 Cash Distribution Received: $\(String(format: "%.2f", result.taxSaleProceeds - result.taxAmount))")
         print("   Net Income Target (Original): $\(String(format: "%.2f", result.grossIncomeVCD - (result.grossIncomeVCD * result.totalTaxRate)))")
@@ -87,7 +92,6 @@ struct RSURunner: ParsableCommand {
             if let capitalGainsTax = result.capitalGainsTax {
                 print("   ✅ Capital gains tax applied (sale price > vest day price)")
                 print("   💰 Capital Gains Tax: $\(String(format: "%.2f", capitalGainsTax))")
-                print("   💵 Net After Capital Gains: $\(String(format: "%.2f", result.netAfterCapitalGains!))")
                 
                 // Calculate what the required sale price would be without capital gains
                 let withoutCapGainsPrice = result.netIncomeTarget / Double(result.sharesAfterTaxSale)
