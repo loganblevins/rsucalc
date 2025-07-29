@@ -26,7 +26,8 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
 - `--vcd-price, -v`: VCD (Vesting Commencement Date) price per share
 - `--vesting-shares, -s`: Number of shares vesting
 - `--vest-day-price, -p`: Share price on vest day
-- `--fica-rate, -f`: FICA tax rate (as decimal, e.g., 0.0765 for 7.65%)
+- `--medicare-rate, -m`: Medicare tax rate (as decimal, e.g., 0.0145 for 1.45%)
+- `--social-security-rate, -s`: Social Security tax rate (as decimal, e.g., 0.062 for 6.2%)
 - `--federal-rate, -r`: Federal tax rate (as decimal, e.g., 0.22 for 22%)
 - `--salt-rate, -t`: SALT (State and Local Tax) rate (as decimal, e.g., 0.05 for 5%)
 - `--shares-sold-for-taxes, -x`: Number of shares sold for tax withholding
@@ -41,7 +42,8 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
   --vcd-price 100.00 \
   --vesting-shares 100 \
   --vest-day-price 120.00 \
-  --fica-rate 0.0765 \
+  --medicare-rate 0.0145 \
+  --social-security-rate 0.062 \
   --federal-rate 0.22 \
   --salt-rate 0.05 \
   --shares-sold-for-taxes 25 \
@@ -53,7 +55,7 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
 Or using short options:
 
 ```bash
-./rsucalc -v 100.00 -s 100 -p 120.00 -f 0.0765 -r 0.22 -t 0.05 -x 25 -a 120.00 -c -n
+./rsucalc -v 100.00 -s 100 -p 120.00 -m 0.0145 -s 0.062 -r 0.22 -t 0.05 -x 25 -a 120.00 -c -n
 ```
 
 ## How It Works
@@ -79,7 +81,8 @@ The tool provides detailed output including:
 
 Common tax rates (enter as decimals):
 
-- **FICA**: 7.65% = 0.0765
+- **Medicare**: 1.45% = 0.0145
+- **Social Security**: 6.2% = 0.062
 - **Federal**: 22% = 0.22, 24% = 0.24, 32% = 0.32
 - **SALT**: 5% = 0.05, 9.3% = 0.093
 - **Capital Gains**: Uses your federal + SALT rates (short-term capital gains are taxed at marginal federal income tax rate + SALT rate)
