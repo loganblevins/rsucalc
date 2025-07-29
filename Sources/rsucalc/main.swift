@@ -71,9 +71,11 @@ struct RSURunner: ParsableCommand {
         print("   Gross Income (Vest Day): $\(String(format: "%.2f", result.grossIncomeVestDay))")
         print("   Total Tax Rate: \(String(format: "%.1f", result.totalTaxRate * 100))%")
         print("   Tax Amount: $\(String(format: "%.2f", result.taxAmount))")
-        print("   Net Income Target: $\(String(format: "%.2f", result.netIncomeTarget))")
-        print("   Shares After Tax Sale: \(result.sharesAfterTaxSale)")
         print("   Tax Sale Proceeds: $\(String(format: "%.2f", result.taxSaleProceeds))")
+        print("   💰 Cash Distribution Received: $\(String(format: "%.2f", result.taxSaleProceeds - result.taxAmount))")
+        print("   Net Income Target (Original): $\(String(format: "%.2f", result.grossIncomeVCD - (result.grossIncomeVCD * result.totalTaxRate)))")
+        print("   Net Income Target (Adjusted): $\(String(format: "%.2f", result.netIncomeTarget))")
+        print("   Shares After Tax Sale: \(result.sharesAfterTaxSale)")
         
         if includeCapitalGains {
             print("   📊 Capital Gains Analysis:")

@@ -54,12 +54,17 @@ final class RSUCalculator {
         // Step 7: Calculate proceeds from tax sale
         let taxSaleProceeds = Double(sharesSoldForTaxes) * taxSalePrice
         
-        // Step 8: Calculate required sale price for remaining shares
-        // Formula: Target Net Income / Remaining Shares
-        // Note: Tax sale proceeds don't go to the user's bank account, so we don't subtract them
-        var requiredSalePrice = sharesAfterTaxSale > 0 ? netIncomeTarget / Double(sharesAfterTaxSale) : 0.0
+        // Step 8: Calculate cash distribution received (excess from tax sale after paying taxes)
+        let cashDistribution = taxSaleProceeds - taxAmount
         
-        // Step 9: Adjust for capital gains tax if applicable
+        // Step 9: Calculate adjusted target net income (subtract cash already received)
+        let adjustedNetIncomeTarget = netIncomeTarget - cashDistribution
+        
+        // Step 10: Calculate required sale price for remaining shares
+        // Formula: Adjusted Target Net Income / Remaining Shares
+        var requiredSalePrice = sharesAfterTaxSale > 0 ? adjustedNetIncomeTarget / Double(sharesAfterTaxSale) : 0.0
+        
+        // Step 11: Adjust for capital gains tax if applicable
         if includeCapitalGains && requiredSalePrice > vestDayPrice {
             // If sale price > vest day price, there's a capital gain
             // Short-term capital gains are taxed at your marginal federal income tax rate + SALT rate
@@ -72,7 +77,7 @@ final class RSUCalculator {
             // We need to account for capital gains tax on the profit
             // Simple approach: targetNetPerShare = salePrice - (salePrice - vestDayPrice) * capitalGainsRate
             // Solving for salePrice: salePrice = (targetNetPerShare - vestDayPrice * capitalGainsRate) / (1 - capitalGainsRate)
-            let targetNetPerShare = netIncomeTarget / Double(sharesAfterTaxSale)
+            let targetNetPerShare = adjustedNetIncomeTarget / Double(sharesAfterTaxSale)
             requiredSalePrice = (targetNetPerShare - vestDayPrice * capitalGainsRate) / (1 - capitalGainsRate)
         }
         
@@ -87,7 +92,7 @@ final class RSUCalculator {
                 capitalGainsRate += 0.038 // 3.8% NIIT
             }
             capitalGainsTax = profitPerShare * capitalGainsRate * Double(sharesAfterTaxSale)
-            netAfterCapitalGains = netIncomeTarget - capitalGainsTax!
+            netAfterCapitalGains = adjustedNetIncomeTarget - capitalGainsTax!
         } else {
             capitalGainsTax = nil
             netAfterCapitalGains = nil
@@ -98,7 +103,7 @@ final class RSUCalculator {
             grossIncomeVestDay: grossIncomeVestDay,
             totalTaxRate: totalTaxRate,
             taxAmount: taxAmount,
-            netIncomeTarget: netIncomeTarget,
+            netIncomeTarget: adjustedNetIncomeTarget,
             sharesAfterTaxSale: sharesAfterTaxSale,
             taxSaleProceeds: taxSaleProceeds,
             requiredSalePrice: requiredSalePrice,
