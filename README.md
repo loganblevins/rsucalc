@@ -19,6 +19,12 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
 
 ## Usage
 
+### Development Usage
+```bash
+swift run rsucalc [OPTIONS]
+```
+
+### Production Usage (after building)
 ```bash
 ./rsucalc [OPTIONS]
 ```
@@ -34,11 +40,31 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
 - `--salt-rate, -t`: SALT (State and Local Tax) rate (as decimal, e.g., 0.05 for 5%)
 - `--shares-sold-for-taxes, -x`: Number of shares sold for tax withholding
 - `--tax-sale-price, -a`: Price per share when sold for taxes
+
+### Optional Flags
+
 - `--include-capital-gains, -c`: Include short-term capital gains tax calculation (uses federal + SALT rates)
 - `--include-net-investment-tax, -n`: Include 3.8% Net Investment Income Tax (NIIT) on capital gains for high-income earners
 
-### Example
+### Examples
 
+**Development:**
+```bash
+swift run rsucalc \
+  --vcd-price 100.00 \
+  --vesting-shares 100 \
+  --vest-day-price 120.00 \
+  --medicare-rate 0.0145 \
+  --social-security-rate 0.062 \
+  --federal-rate 0.22 \
+  --salt-rate 0.05 \
+  --shares-sold-for-taxes 25 \
+  --tax-sale-price 120.00 \
+  --include-capital-gains \
+  --include-net-investment-tax
+```
+
+**Production:**
 ```bash
 ./rsucalc \
   --vcd-price 100.00 \
@@ -54,10 +80,9 @@ This tool helps you calculate what price you need to sell your remaining RSU sha
   --include-net-investment-tax
 ```
 
-Or using short options:
-
+**Short options:**
 ```bash
-./rsucalc -v 100.00 -s 100 -p 120.00 -m 0.0145 -s 0.062 -r 0.22 -t 0.05 -x 25 -a 120.00 -c -n
+swift run rsucalc -v 100.00 -s 100 -p 120.00 -m 0.0145 -o 0.062 -r 0.22 -t 0.05 -x 25 -a 120.00 -c -n
 ```
 
 ## How It Works
@@ -75,8 +100,10 @@ The calculator performs the following steps:
 The tool provides detailed output including:
 
 - Input parameters summary
-- Calculation breakdown
+- Calculation breakdown with individual tax components
+- Tax sale proceeds and cash distribution
 - Required sale price for remaining shares
+- Capital gains analysis (when enabled)
 - Comparison with vest day price (premium/discount analysis)
 
 ## Tax Rate Examples
@@ -133,14 +160,14 @@ swift test --filter testRealWorldScenario
 
 ### Test Coverage
 
-The test suite covers:
+The test suite includes **45 comprehensive tests** covering:
 - ✅ Basic calculation scenarios
-- ✅ Real-world RSU scenarios
+- ✅ Real-world RSU scenarios (4 different case studies)
 - ✅ Edge cases (zero taxes, all shares sold, etc.)
-- ✅ Large numbers and precision
-- ✅ Input validation
-- ✅ Mathematical consistency
-- ✅ Performance with large datasets
+- ✅ Large numbers and precision handling
+- ✅ Input validation with detailed error messages
+- ✅ Mathematical consistency verification
+- ✅ Performance benchmarks with large datasets
 - ✅ Capital gains tax calculations (federal + SALT rates)
 - ✅ Capital gains edge cases (no profit, losses, zero SALT)
 - ✅ Capital gains mathematical consistency
