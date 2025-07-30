@@ -86,41 +86,58 @@ struct RSURunner: ParsableCommand {
             includeNetInvestmentTax: includeNetInvestmentTax
         )
         
-        print("\n📊 RSU Calculator Results")
-        print(String(repeating: "=", count: 50))
+        print("\n" + String(repeating: "=", count: 60))
+        print("📊 RSU CALCULATOR RESULTS")
+        print(String(repeating: "=", count: 60))
         
-        print("\n📈 Input Parameters:")
-        print("   VCD Price: $\(formatAsCurrency(result.vcdPrice))")
-        print("   Vesting Shares: \(vestingShares)")
-        print("   Vest Day Price: $\(formatAsCurrency(result.vestDayPrice))")
-        print("   Medicare Rate: \(formatAsPercentage(medicareRate.value))%")
-        print("   Social Security Rate: \(formatAsPercentage(socialSecurityRate.value))%")
-        print("   Federal Rate: \(formatAsPercentage(federalRate.value))%")
-        print("   SALT Rate: \(formatAsPercentage(saltRate.value))%")
-        print("   Shares Sold for Taxes: \(sharesSoldForTaxes)")
-        print("   Tax Sale Price: $\(formatAsCurrency(result.taxSalePrice))")
+        // Section 1: Input Summary
+        print("\n📋 INPUT SUMMARY")
+        print(String(repeating: "-", count: 30))
+        print("💰 Shares & Prices:")
+        print("   • Vesting Shares: \(vestingShares)")
+        print("   • VCD Price: $\(formatAsCurrency(result.vcdPrice))")
+        print("   • Vest Day Price: $\(formatAsCurrency(result.vestDayPrice))")
+        print("   • Tax Sale Price: $\(formatAsCurrency(result.taxSalePrice))")
+        print("   • Shares Sold for Taxes: \(sharesSoldForTaxes)")
         
-        print("\n💰 Calculation Breakdown:")
-        print("   Gross Income (VCD Price): $\(formatAsCurrency(result.grossIncomeVCD))")
-        print("   Gross Income (Vest Day): $\(formatAsCurrency(result.grossIncomeVestDay))")
-        print("   Total Tax Rate: \(formatAsPercentage(result.totalTaxRate))%")
-        print("   Tax Amount: $\(formatAsCurrency(result.taxAmount))")
-        print("   📊 Individual Tax Components:")
-        print("      Federal Tax: $\(formatAsCurrency(result.federalTax))")
-        print("      Social Security Tax: $\(formatAsCurrency(result.socialSecurityTax))")
-        print("      Medicare Tax: $\(formatAsCurrency(result.medicareTax))")
-        print("      SALT Tax: $\(formatAsCurrency(result.saltTax))")
-        print("   Tax Sale Proceeds: $\(formatAsCurrency(result.taxSaleProceeds))")
-        print("   💰 Cash Distribution Received: $\(formatAsCurrency(result.cashDistribution))")
-        print("   Net Income Target (Original): $\(formatAsCurrency(result.originalNetIncomeTarget))")
-        print("   Net Income Target (Adjusted): $\(formatAsCurrency(result.netIncomeTarget))")
-        print("   Shares After Tax Sale: \(result.sharesAfterTaxSale)")
+        print("\n📊 Tax Rates:")
+        print("   • Federal: \(formatAsPercentage(federalRate.value))%")
+        print("   • Social Security: \(formatAsPercentage(socialSecurityRate.value))%")
+        print("   • Medicare: \(formatAsPercentage(medicareRate.value))%")
+        print("   • SALT: \(formatAsPercentage(saltRate.value))%")
+        print("   • Total: \(formatAsPercentage(result.totalTaxRate))%")
+        
+        // Section 2: Financial Breakdown
+        print("\n💰 FINANCIAL BREAKDOWN")
+        print(String(repeating: "-", count: 30))
+        print("📈 Gross Income:")
+        print("   • At VCD Price: $\(formatAsCurrency(result.grossIncomeVCD))")
+        print("   • At Vest Price: $\(formatAsCurrency(result.grossIncomeVestDay))")
+        
+        print("\n🏦 Tax Breakdown:")
+        print("   • Federal Tax: $\(formatAsCurrency(result.federalTax))")
+        print("   • Social Security: $\(formatAsCurrency(result.socialSecurityTax))")
+        print("   • Medicare Tax: $\(formatAsCurrency(result.medicareTax))")
+        print("   • SALT Tax: $\(formatAsCurrency(result.saltTax))")
+        print("   • TOTAL TAXES: $\(formatAsCurrency(result.taxAmount))")
+        
+        print("\n💸 Share Sale for Taxes:")
+        print("   • Tax Sale Proceeds: $\(formatAsCurrency(result.taxSaleProceeds))")
+        print("   • Cash Distribution: $\(formatAsCurrency(result.cashDistribution))")
+        print("   • Remaining Shares: \(result.sharesAfterTaxSale)")
+        
+        print("\n🎯 Net Income Targets:")
+        print("   • Original Target: $\(formatAsCurrency(result.originalNetIncomeTarget))")
+        print("   • Adjusted Target: $\(formatAsCurrency(result.netIncomeTarget))")
+        
+        // Section 3: Price Analysis
+        print("\n📊 PRICE ANALYSIS")
+        print(String(repeating: "-", count: 30))
         
         if includeCapitalGains {
-            print("   📊 Capital Gains Analysis:")
             if let capitalGainsTax = result.capitalGainsTax {
-                print("   ✅ Capital gains tax applied (sale price > vest day price)")
-                print("   💰 Capital Gains Tax: $\(formatAsCurrency(capitalGainsTax))")
+                print("✅ Capital gains tax applies (selling above vest price)")
+                print("💰 Capital Gains Tax: $\(formatAsCurrency(capitalGainsTax))")
                 
                 // Calculate all scenarios
                 let withoutCapGainsPrice = result.netIncomeTarget / Decimal(result.sharesAfterTaxSale)
@@ -141,43 +158,48 @@ struct RSURunner: ParsableCommand {
                         includeNetInvestmentTax: false
                     )
                     
-                    // Show all three scenarios
-                    print("   📊 Price Comparison (all scenarios):")
-                    print("   📉 WITHOUT capital gains: $\(formatAsCurrency(withoutCapGainsPrice))")
-                    print("   📈 WITH capital gains (no NIIT): $\(formatAsCurrency(resultWithoutNIIT.requiredSalePrice))")
-                    print("   📈 WITH capital gains + NIIT: $\(formatAsCurrency(result.requiredSalePrice))")
-                    print("   💸 Capital gains impact: +$\(formatAsCurrency(resultWithoutNIIT.requiredSalePrice - withoutCapGainsPrice)) per share")
-                    print("   💸 NIIT impact: +$\(formatAsCurrency(result.requiredSalePrice - resultWithoutNIIT.requiredSalePrice)) per share")
-                    print("   💸 Total impact: +$\(formatAsCurrency(result.requiredSalePrice - withoutCapGainsPrice)) per share")
+                    print("\n📈 PRICE SCENARIOS:")
+                    print("   1️⃣  No Capital Gains: $\(formatAsCurrency(withoutCapGainsPrice))")
+                    print("   2️⃣  + Capital Gains: $\(formatAsCurrency(resultWithoutNIIT.requiredSalePrice))")
+                    print("   3️⃣  + Cap Gains + NIIT: $\(formatAsCurrency(result.requiredSalePrice))")
+                    
+                    print("\n💸 IMPACT ANALYSIS:")
+                    print("   • Capital Gains: +$\(formatAsCurrency(resultWithoutNIIT.requiredSalePrice - withoutCapGainsPrice))/share")
+                    print("   • NIIT (3.8%): +$\(formatAsCurrency(result.requiredSalePrice - resultWithoutNIIT.requiredSalePrice))/share")
+                    print("   • TOTAL IMPACT: +$\(formatAsCurrency(result.requiredSalePrice - withoutCapGainsPrice))/share")
                 } else {
-                    // Only show with/without capital gains
-                    print("   📈 Required sale price WITH capital gains: $\(formatAsCurrency(result.requiredSalePrice))")
-                    print("   📉 Required sale price WITHOUT capital gains: $\(formatAsCurrency(withoutCapGainsPrice))")
-                    print("   💸 Capital gains impact: +$\(formatAsCurrency(result.requiredSalePrice - withoutCapGainsPrice)) per share")
+                    print("\n📈 PRICE SCENARIOS:")
+                    print("   1️⃣  No Capital Gains: $\(formatAsCurrency(withoutCapGainsPrice))")
+                    print("   2️⃣  + Capital Gains: $\(formatAsCurrency(result.requiredSalePrice))")
+                    
+                    print("\n💸 IMPACT ANALYSIS:")
+                    print("   • Capital Gains: +$\(formatAsCurrency(result.requiredSalePrice - withoutCapGainsPrice))/share")
                 }
             } else {
-                print("   ⚠️  Capital gains tax ignored (required sale price ≤ vest day price)")
-                print("   📊 No profit to tax - selling at or below cost basis")
+                print("⚠️  No capital gains tax (selling at/below vest price)")
             }
         }
         
-        print("\n🎯 Required Sale Price:")
-        print("   To achieve your target net income of $\(formatAsCurrency(result.netIncomeTarget))")
-        print("   You need to sell your remaining \(result.sharesAfterTaxSale) shares at:")
-        print("   💵 $\(formatAsCurrency(result.requiredSalePrice)) per share")
+        // Section 4: Final Result
+        print("\n🎯 FINAL RESULT")
+        print(String(repeating: "-", count: 30))
+        print("Target Net Income: $\(formatAsCurrency(result.netIncomeTarget))")
+        print("Remaining Shares: \(result.sharesAfterTaxSale)")
+        print("")
+        print("💵 REQUIRED SALE PRICE: $\(formatAsCurrency(result.requiredSalePrice))")
         
-        print("\n📋 Summary:")
+        print("\n📋 RECOMMENDATION:")
         if result.requiredSalePrice > result.vestDayPrice {
-            print("   ⬆️  You need a higher sale price than vest day price")
-            print("   📈 Required premium: $\(formatAsCurrency(result.requiredSalePrice - result.vestDayPrice)) per share")
+            let premium = result.requiredSalePrice - result.vestDayPrice
+            print("⬆️  WAIT for higher price (+$\(formatAsCurrency(premium))/share premium needed)")
         } else if result.requiredSalePrice < result.vestDayPrice {
-            print("   ⬇️  You can sell below vest day price and still meet your target")
-            print("   📉 Acceptable discount: $\(formatAsCurrency(result.vestDayPrice - result.requiredSalePrice)) per share")
+            let discount = result.vestDayPrice - result.requiredSalePrice
+            print("✅ SELL NOW (can accept up to $\(formatAsCurrency(discount))/share discount)")
         } else {
-            print("   ✅ Required sale price equals vest day price")
+            print("✅ SELL at vest day price (perfect match)")
         }
         
-        print("\n" + String(repeating: "=", count: 50))
+        print("\n" + String(repeating: "=", count: 60))
     }
 }
 
