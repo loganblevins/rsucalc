@@ -122,11 +122,39 @@ struct RSURunner: ParsableCommand {
                 print("   ✅ Capital gains tax applied (sale price > vest day price)")
                 print("   💰 Capital Gains Tax: $\(formatAsCurrency(capitalGainsTax))")
                 
-                // Calculate what the required sale price would be without capital gains
+                // Calculate all scenarios
                 let withoutCapGainsPrice = result.netIncomeTarget / Decimal(result.sharesAfterTaxSale)
-                print("   📈 Required sale price WITH capital gains: $\(formatAsCurrency(result.requiredSalePrice))")
-                print("   📉 Required sale price WITHOUT capital gains: $\(formatAsCurrency(withoutCapGainsPrice))")
-                print("   💸 Capital gains impact: +$\(formatAsCurrency(result.requiredSalePrice - withoutCapGainsPrice)) per share")
+                
+                if includeNetInvestmentTax {
+                    // Calculate WITH capital gains but WITHOUT NIIT
+                    let resultWithoutNIIT = calculator.calculateRequiredSalePrice(
+                        vcdPrice: vcdPrice.value,
+                        vestingShares: vestingShares,
+                        vestDayPrice: vestDayPrice.value,
+                        medicareRate: medicareRate.value,
+                        socialSecurityRate: socialSecurityRate.value,
+                        federalRate: federalRate.value,
+                        saltRate: saltRate.value,
+                        sharesSoldForTaxes: sharesSoldForTaxes,
+                        taxSalePrice: taxSalePrice.value,
+                        includeCapitalGains: true,
+                        includeNetInvestmentTax: false
+                    )
+                    
+                    // Show all three scenarios
+                    print("   📊 Price Comparison (all scenarios):")
+                    print("   📉 WITHOUT capital gains: $\(formatAsCurrency(withoutCapGainsPrice))")
+                    print("   📈 WITH capital gains (no NIIT): $\(formatAsCurrency(resultWithoutNIIT.requiredSalePrice))")
+                    print("   📈 WITH capital gains + NIIT: $\(formatAsCurrency(result.requiredSalePrice))")
+                    print("   💸 Capital gains impact: +$\(formatAsCurrency(resultWithoutNIIT.requiredSalePrice - withoutCapGainsPrice)) per share")
+                    print("   💸 NIIT impact: +$\(formatAsCurrency(result.requiredSalePrice - resultWithoutNIIT.requiredSalePrice)) per share")
+                    print("   💸 Total impact: +$\(formatAsCurrency(result.requiredSalePrice - withoutCapGainsPrice)) per share")
+                } else {
+                    // Only show with/without capital gains
+                    print("   📈 Required sale price WITH capital gains: $\(formatAsCurrency(result.requiredSalePrice))")
+                    print("   📉 Required sale price WITHOUT capital gains: $\(formatAsCurrency(withoutCapGainsPrice))")
+                    print("   💸 Capital gains impact: +$\(formatAsCurrency(result.requiredSalePrice - withoutCapGainsPrice)) per share")
+                }
             } else {
                 print("   ⚠️  Capital gains tax ignored (required sale price ≤ vest day price)")
                 print("   📊 No profit to tax - selling at or below cost basis")
