@@ -24,9 +24,17 @@ struct RSURunner: ParsableCommand {
         return String(format: "%.2f", NSDecimalNumber(decimal: value).doubleValue * 100)
     }
     
-    /// Convert Decimal to formatted currency string
+    /// Convert Decimal to formatted currency string with commas
     private func formatAsCurrency(_ value: Decimal) -> String {
-        return String(format: "%.2f", NSDecimalNumber(decimal: value).doubleValue)
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        formatter.groupingSeparator = ","
+        formatter.usesGroupingSeparator = true
+        
+        let number = NSDecimalNumber(decimal: value)
+        return formatter.string(from: number) ?? String(format: "%.2f", number.doubleValue)
     }
     
     @Option(name: [.customShort("v"), .customLong("vcd-price")], help: "VCD (Vesting Commencement Date) price per share")
@@ -93,30 +101,30 @@ struct RSURunner: ParsableCommand {
         print("   Tax Sale Price: $\(formatAsCurrency(result.taxSalePrice))")
         
         print("\n💰 Calculation Breakdown:")
-        print("   Gross Income (VCD Price): $\(result.grossIncomeVCD)")
-        print("   Gross Income (Vest Day): $\(result.grossIncomeVestDay)")
+        print("   Gross Income (VCD Price): $\(formatAsCurrency(result.grossIncomeVCD))")
+        print("   Gross Income (Vest Day): $\(formatAsCurrency(result.grossIncomeVestDay))")
         print("   Total Tax Rate: \(formatAsPercentage(result.totalTaxRate))%")
-        print("   Tax Amount: $\(result.taxAmount)")
+        print("   Tax Amount: $\(formatAsCurrency(result.taxAmount))")
         print("   📊 Individual Tax Components:")
-        print("      Federal Tax: $\(result.federalTax)")
-        print("      Social Security Tax: $\(result.socialSecurityTax)")
-        print("      Medicare Tax: $\(result.medicareTax)")
-        print("      SALT Tax: $\(result.saltTax)")
-        print("   Tax Sale Proceeds: $\(result.taxSaleProceeds)")
-        print("   💰 Cash Distribution Received: $\(result.cashDistribution)")
-        print("   Net Income Target (Original): $\(result.originalNetIncomeTarget)")
-        print("   Net Income Target (Adjusted): $\(result.netIncomeTarget)")
+        print("      Federal Tax: $\(formatAsCurrency(result.federalTax))")
+        print("      Social Security Tax: $\(formatAsCurrency(result.socialSecurityTax))")
+        print("      Medicare Tax: $\(formatAsCurrency(result.medicareTax))")
+        print("      SALT Tax: $\(formatAsCurrency(result.saltTax))")
+        print("   Tax Sale Proceeds: $\(formatAsCurrency(result.taxSaleProceeds))")
+        print("   💰 Cash Distribution Received: $\(formatAsCurrency(result.cashDistribution))")
+        print("   Net Income Target (Original): $\(formatAsCurrency(result.originalNetIncomeTarget))")
+        print("   Net Income Target (Adjusted): $\(formatAsCurrency(result.netIncomeTarget))")
         print("   Shares After Tax Sale: \(result.sharesAfterTaxSale)")
         
         if includeCapitalGains {
             print("   📊 Capital Gains Analysis:")
             if let capitalGainsTax = result.capitalGainsTax {
                 print("   ✅ Capital gains tax applied (sale price > vest day price)")
-                print("   💰 Capital Gains Tax: $\(capitalGainsTax)")
+                print("   💰 Capital Gains Tax: $\(formatAsCurrency(capitalGainsTax))")
                 
                 // Calculate what the required sale price would be without capital gains
                 let withoutCapGainsPrice = result.netIncomeTarget / Decimal(result.sharesAfterTaxSale)
-                print("   📈 Required sale price WITH capital gains: $\(result.requiredSalePrice)")
+                print("   📈 Required sale price WITH capital gains: $\(formatAsCurrency(result.requiredSalePrice))")
                 print("   📉 Required sale price WITHOUT capital gains: $\(formatAsCurrency(withoutCapGainsPrice))")
                 print("   💸 Capital gains impact: +$\(formatAsCurrency(result.requiredSalePrice - withoutCapGainsPrice)) per share")
             } else {
@@ -126,9 +134,9 @@ struct RSURunner: ParsableCommand {
         }
         
         print("\n🎯 Required Sale Price:")
-        print("   To achieve your target net income of $\(result.netIncomeTarget)")
+        print("   To achieve your target net income of $\(formatAsCurrency(result.netIncomeTarget))")
         print("   You need to sell your remaining \(result.sharesAfterTaxSale) shares at:")
-        print("   💵 $\(result.requiredSalePrice) per share")
+        print("   💵 $\(formatAsCurrency(result.requiredSalePrice)) per share")
         
         print("\n📋 Summary:")
         if result.requiredSalePrice > result.vestDayPrice {
