@@ -160,7 +160,7 @@ swift test --filter testRealWorldScenario
 
 ### Test Coverage
 
-The test suite includes **45 comprehensive tests** covering:
+The test suite includes comprehensive tests covering:
 - ✅ Basic calculation scenarios
 - ✅ Real-world RSU scenarios (4 different case studies)
 - ✅ Edge cases (zero taxes, all shares sold, etc.)

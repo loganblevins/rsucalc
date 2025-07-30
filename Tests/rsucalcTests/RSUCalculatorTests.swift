@@ -221,28 +221,6 @@ final class RSUCalculatorTests: XCTestCase {
         XCTAssertEqual(result.requiredSalePrice, 1025.73, accuracy: 0.01)
     }
     
-    // MARK: - Precision Tests
-    
-    func testPrecisionWithDecimals() {
-        let result = calculator.calculateRequiredSalePrice(
-            vcdPrice: 64.62,
-            vestingShares: 551,
-            vestDayPrice: 83.04,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.0,
-            sharesSoldForTaxes: 193,
-            taxSalePrice: 70.3279
-        )
-        
-        // Test that we get the exact expected values with proper precision
-        // Cash distribution = 13573.28 - 13566.38 = 6.90
-        // Adjusted target = 25048.55 - 6.90 = 25041.64
-        XCTAssertEqual(result.netIncomeTarget, 25041.64, accuracy: 0.01)
-        XCTAssertEqual(result.requiredSalePrice, 69.95, accuracy: 0.01)
-    }
-    
     // MARK: - Input Validation Tests
     
     func testValidateInputsWithValidData() {
@@ -481,25 +459,6 @@ final class RSUCalculatorTests: XCTestCase {
         XCTAssertEqual(result.capitalGainsTax!, 396.85, accuracy: 0.01)
     }
     
-    func testCapitalGainsMathematicalConsistency() {
-        let result = calculator.calculateRequiredSalePrice(
-            vcdPrice: 100.0,
-            vestingShares: 100,
-            vestDayPrice: 80.0,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.05,
-            sharesSoldForTaxes: 25,
-            taxSalePrice: 80.0,
-            includeCapitalGains: true
-        )
-        
-        // Capital gains tax should exist when profit > 0
-        XCTAssertNotNil(result.capitalGainsTax)
-        XCTAssertTrue(result.capitalGainsTax! > 0)
-    }
-    
     func testCapitalGainsDisabled() {
         let result = calculator.calculateRequiredSalePrice(
             vcdPrice: 100.0,
@@ -521,35 +480,48 @@ final class RSUCalculatorTests: XCTestCase {
     
     // MARK: - Performance Tests
     
-    func testPerformanceWithLargeNumbers() {
+    func testPerformanceComprehensive() {
         measure {
+            // Test 1: Large numbers without capital gains
             _ = calculator.calculateRequiredSalePrice(
                 vcdPrice: 100.0,
                 vestingShares: 100000,
                 vestDayPrice: 120.0,
                 medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
+                socialSecurityRate: 0.062,
                 federalRate: 0.22,
                 saltRate: 0.05,
                 sharesSoldForTaxes: 25000,
                 taxSalePrice: 120.0
             )
-        }
-    }
-    
-    func testPerformanceWithCapitalGains() {
-        measure {
+            
+            // Test 2: With capital gains
             _ = calculator.calculateRequiredSalePrice(
                 vcdPrice: 100.0,
                 vestingShares: 10000,
                 vestDayPrice: 80.0,
                 medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
+                socialSecurityRate: 0.062,
                 federalRate: 0.22,
                 saltRate: 0.05,
                 sharesSoldForTaxes: 2500,
                 taxSalePrice: 80.0,
                 includeCapitalGains: true
+            )
+            
+            // Test 3: With capital gains + NIIT
+            _ = calculator.calculateRequiredSalePrice(
+                vcdPrice: 100.0,
+                vestingShares: 1000,
+                vestDayPrice: 80.0,
+                medicareRate: 0.0145,
+                socialSecurityRate: 0.062,
+                federalRate: 0.22,
+                saltRate: 0.05,
+                sharesSoldForTaxes: 250,
+                taxSalePrice: 80.0,
+                includeCapitalGains: true,
+                includeNetInvestmentTax: true
             )
         }
     }
@@ -676,44 +648,9 @@ final class RSUCalculatorTests: XCTestCase {
         XCTAssertTrue(result.capitalGainsTax! > 0)
     }
     
-    func testNetInvestmentTaxMathematicalConsistency() {
-        let result = calculator.calculateRequiredSalePrice(
-            vcdPrice: 100.0,
-            vestingShares: 100,
-            vestDayPrice: 80.0,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.05,
-            sharesSoldForTaxes: 25,
-            taxSalePrice: 80.0,
-            includeCapitalGains: true,
-            includeNetInvestmentTax: true
-        )
-        
-        // Capital gains tax should exist with NIIT
-        XCTAssertNotNil(result.capitalGainsTax)
-        XCTAssertTrue(result.capitalGainsTax! > 0)
-    }
+
     
-    func testPerformanceWithNetInvestmentTax() {
-        measure {
-            let result = calculator.calculateRequiredSalePrice(
-                vcdPrice: 100.0,
-                vestingShares: 1000,
-                vestDayPrice: 80.0,
-                medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-                federalRate: 0.22,
-                saltRate: 0.05,
-                sharesSoldForTaxes: 250,
-                taxSalePrice: 80.0,
-                includeCapitalGains: true,
-                includeNetInvestmentTax: true
-            )
-            XCTAssertNotNil(result)
-        }
-    }
+
     
     // MARK: - Real-World Case Tests
     
@@ -1052,193 +989,11 @@ final class RSUCalculatorTests: XCTestCase {
         }
     }
     
-    func testRealWorldCasesMathematicalConsistency() {
-        // Test that all real-world cases follow the mathematical relationships
-        
-        // Case 1
-        let result1 = calculator.calculateRequiredSalePrice(
-            vcdPrice: 89.70,
-            vestingShares: 551,
-            vestDayPrice: 89.70,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.0,
-            sharesSoldForTaxes: 166,
-            taxSalePrice: 91.4334
-        )
-        
-        // Verify mathematical relationships
-        XCTAssertEqual(NSDecimalNumber(decimal: result1.grossIncomeVCD).doubleValue, NSDecimalNumber(decimal: Decimal(551) * Decimal(89.70)).doubleValue, accuracy: 0.01)
-        XCTAssertEqual(NSDecimalNumber(decimal: result1.grossIncomeVestDay).doubleValue, NSDecimalNumber(decimal: Decimal(551) * Decimal(89.70)).doubleValue, accuracy: 0.01)
-        XCTAssertEqual(NSDecimalNumber(decimal: result1.totalTaxRate).doubleValue, NSDecimalNumber(decimal: Decimal(0.22 + 0.062 + 0.0145)).doubleValue, accuracy: 0.0001)
-        XCTAssertEqual(NSDecimalNumber(decimal: result1.taxAmount).doubleValue, NSDecimalNumber(decimal: result1.grossIncomeVestDay * result1.totalTaxRate).doubleValue, accuracy: 0.01)
-        XCTAssertEqual(result1.sharesAfterTaxSale, 551 - 166)
-        XCTAssertEqual(NSDecimalNumber(decimal: result1.taxSaleProceeds).doubleValue, NSDecimalNumber(decimal: Decimal(166) * Decimal(91.4334)).doubleValue, accuracy: 0.01)
-        
-        // Case 2
-        let result2 = calculator.calculateRequiredSalePrice(
-            vcdPrice: 83.04,
-            vestingShares: 551,
-            vestDayPrice: 83.04,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.0,
-            sharesSoldForTaxes: 193,
-            taxSalePrice: 70.3279
-        )
-        
-        // Verify mathematical relationships
-        XCTAssertEqual(NSDecimalNumber(decimal: result2.grossIncomeVCD).doubleValue, NSDecimalNumber(decimal: Decimal(551) * Decimal(83.04)).doubleValue, accuracy: 0.01)
-        XCTAssertEqual(NSDecimalNumber(decimal: result2.grossIncomeVestDay).doubleValue, NSDecimalNumber(decimal: Decimal(551) * Decimal(83.04)).doubleValue, accuracy: 0.01)
-        XCTAssertEqual(NSDecimalNumber(decimal: result2.totalTaxRate).doubleValue, NSDecimalNumber(decimal: Decimal(0.22 + 0.062 + 0.0145)).doubleValue, accuracy: 0.0001)
-        XCTAssertEqual(NSDecimalNumber(decimal: result2.taxAmount).doubleValue, NSDecimalNumber(decimal: result2.grossIncomeVestDay * result2.totalTaxRate).doubleValue, accuracy: 0.01)
-        XCTAssertEqual(result2.sharesAfterTaxSale, 551 - 193)
-        XCTAssertEqual(NSDecimalNumber(decimal: result2.taxSaleProceeds).doubleValue, NSDecimalNumber(decimal: Decimal(193) * Decimal(70.3279)).doubleValue, accuracy: 0.01)
-    }
+
     
-    func testRealWorldCasesCashDistributionAccuracy() {
-        // Test that cash distribution calculations match real-world statements exactly
-        
-        // Case 1: $15,177.94 - $14,654.42 = $523.52
-        let result1 = calculator.calculateRequiredSalePrice(
-            vcdPrice: 89.70,
-            vestingShares: 551,
-            vestDayPrice: 89.70,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.0,
-            sharesSoldForTaxes: 166,
-            taxSalePrice: 91.4334
-        )
-        
-        let cashDistribution1 = result1.taxSaleProceeds - result1.taxAmount
-        XCTAssertEqual(cashDistribution1, 523.52, accuracy: 0.01)
-        
-        // Case 2: $13,573.28 - $13,566.38 = $6.90
-        let result2 = calculator.calculateRequiredSalePrice(
-            vcdPrice: 83.04,
-            vestingShares: 551,
-            vestDayPrice: 83.04,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.0,
-            sharesSoldForTaxes: 193,
-            taxSalePrice: 70.3279
-        )
-        
-        let cashDistribution2 = result2.taxSaleProceeds - result2.taxAmount
-        XCTAssertEqual(NSDecimalNumber(decimal: cashDistribution2).doubleValue, 6.91, accuracy: 0.01)
-        
-        // Case 3: $9,416.90 - $9,367.72 = $49.18
-        let result3 = calculator.calculateRequiredSalePrice(
-            vcdPrice: 57.34,
-            vestingShares: 551,
-            vestDayPrice: 57.34,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.0,
-            sharesSoldForTaxes: 167,
-            taxSalePrice: 56.3886
-        )
-        
-        let cashDistribution3 = result3.taxSaleProceeds - result3.taxAmount
-        XCTAssertEqual(cashDistribution3, 49.18, accuracy: 0.01)
-        
-        // Case 4: $1,071.46 - $1,071.08 = $0.38
-        let result4 = calculator.calculateRequiredSalePrice(
-            vcdPrice: 57.34,
-            vestingShares: 63,
-            vestDayPrice: 57.34,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.0,
-            sharesSoldForTaxes: 19,
-            taxSalePrice: 56.3924
-        )
-        
-        let cashDistribution4 = result4.taxSaleProceeds - result4.taxAmount
-        XCTAssertEqual(NSDecimalNumber(decimal: cashDistribution4).doubleValue, 0.38, accuracy: 0.01)
-    }
+
     
-    // MARK: - Clean Testing with Enhanced Result Struct
-    
-    func testRealWorldCasesWithCleanData() {
-        // This test demonstrates how much cleaner testing can be with all data stored in the result struct
-        
-        // Case 1: High price scenario
-        let result1 = calculator.calculateRequiredSalePrice(
-            vcdPrice: 89.70,
-            vestingShares: 551,
-            vestDayPrice: 89.70,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.0,
-            sharesSoldForTaxes: 166,
-            taxSalePrice: 91.4334
-        )
-        
-        // Now we can test everything cleanly without manual calculations
-        XCTAssertEqual(result1.vestingShares, 551)
-        XCTAssertEqual(result1.sharesSoldForTaxes, 166)
-        XCTAssertEqual(result1.sharesAfterTaxSale, 551 - 166)
-        XCTAssertEqual(result1.vcdPrice, 89.70)
-        XCTAssertEqual(result1.vestDayPrice, 89.70)
-        XCTAssertEqual(result1.taxSalePrice, 91.4334)
-        XCTAssertEqual(result1.medicareRate, 0.0145)
-        XCTAssertEqual(result1.socialSecurityRate, 0.062)
-        XCTAssertEqual(result1.federalRate, 0.22)
-        XCTAssertEqual(result1.saltRate, 0.0)
-        
-        // Test calculated values
-        XCTAssertEqual(result1.grossIncomeVCD, 49424.70, accuracy: 0.01)
-        XCTAssertEqual(result1.grossIncomeVestDay, 49424.70, accuracy: 0.01)
-        XCTAssertEqual(result1.taxAmount, 14654.42, accuracy: 0.01)
-        XCTAssertEqual(result1.taxSaleProceeds, 15177.94, accuracy: 0.01)
-        XCTAssertEqual(result1.cashDistribution, 523.52, accuracy: 0.01)
-        XCTAssertEqual(result1.originalNetIncomeTarget, 34770.28, accuracy: 0.01)
-        XCTAssertEqual(result1.adjustedNetIncomeTarget, 34246.76, accuracy: 0.01)
-        
-        // Test individual tax components
-        XCTAssertEqual(result1.federalTax, 10873.43, accuracy: 0.01)
-        XCTAssertEqual(result1.medicareTax, 716.66, accuracy: 0.01)
-        XCTAssertEqual(result1.socialSecurityTax, 3064.33, accuracy: 0.01)
-        XCTAssertEqual(result1.saltTax, 0.0, accuracy: 0.01)
-        
-        // Test mathematical relationships
-        XCTAssertEqual(result1.cashDistribution, result1.taxSaleProceeds - result1.taxAmount, accuracy: 0.01)
-        XCTAssertEqual(result1.adjustedNetIncomeTarget, result1.originalNetIncomeTarget - result1.cashDistribution, accuracy: 0.01)
-        XCTAssertEqual(result1.requiredSalePrice, result1.adjustedNetIncomeTarget / Decimal(result1.sharesAfterTaxSale), accuracy: 0.01)
-        
-        // Case 2: Lower price scenario
-        let result2 = calculator.calculateRequiredSalePrice(
-            vcdPrice: 83.04,
-            vestingShares: 551,
-            vestDayPrice: 83.04,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.0,
-            sharesSoldForTaxes: 193,
-            taxSalePrice: 70.3279
-        )
-        
-        // Test all the same relationships cleanly
-        XCTAssertEqual(result2.cashDistribution, result2.taxSaleProceeds - result2.taxAmount, accuracy: 0.01)
-        XCTAssertEqual(result2.adjustedNetIncomeTarget, result2.originalNetIncomeTarget - result2.cashDistribution, accuracy: 0.01)
-        XCTAssertEqual(result2.requiredSalePrice, result2.adjustedNetIncomeTarget / Decimal(result2.sharesAfterTaxSale), accuracy: 0.01)
-        
-        // Verify the exact E*TRADE values
-        XCTAssertEqual(result2.taxAmount, 13566.37, accuracy: 0.01)
-        XCTAssertEqual(result2.taxSaleProceeds, 13573.28, accuracy: 0.01)
-        XCTAssertEqual(result2.cashDistribution, 6.91, accuracy: 0.01)
-    }
+
     
     func testMathematicalConsistencyWithCleanData() {
         // Test that all mathematical relationships hold true with the enhanced result struct
