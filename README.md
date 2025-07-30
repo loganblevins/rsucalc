@@ -1,5 +1,7 @@
 # RSU Calculator CLI
 
+> ⚠️ **AI-Generated Code Disclaimer**: This project was largely written by AI (Claude) and contains significant amounts of AI-generated code and documentation. While functional and tested, much of the content may be considered "AI slop" - use at your own discretion and verify calculations independently for any financial decisions.
+
 A command-line tool for calculating RSU (Restricted Stock Unit) vesting scenarios and determining required sale prices to achieve target net income.
 
 ## Overview
