@@ -1,18 +1,57 @@
 import Foundation
 
 struct RSUCalculationResult {
-    let grossIncomeVCD: Double
-    let grossIncomeVestDay: Double
-    let totalTaxRate: Double
-    let taxAmount: Double
-    let netIncomeTarget: Double
+    let grossIncomeVCD: Decimal
+    let grossIncomeVestDay: Decimal
+    let totalTaxRate: Decimal
+    let taxAmount: Decimal
+    let federalTax: Decimal
+    let socialSecurityTax: Decimal
+    let medicareTax: Decimal
+    let saltTax: Decimal
+    let netIncomeTarget: Decimal
     let sharesAfterTaxSale: Int
-    let taxSaleProceeds: Double
-    let requiredSalePrice: Double
-    let capitalGainsTax: Double?
+    let taxSaleProceeds: Decimal
+    let requiredSalePrice: Decimal
+    let capitalGainsTax: Decimal?
+    
+    // Additional fields for clean testing
+    let cashDistribution: Decimal
+    let adjustedNetIncomeTarget: Decimal
+    let originalNetIncomeTarget: Decimal
+    let vestingShares: Int
+    let sharesSoldForTaxes: Int
+    let vcdPrice: Decimal
+    let vestDayPrice: Decimal
+    let taxSalePrice: Decimal
+    let medicareRate: Decimal
+    let socialSecurityRate: Decimal
+    let federalRate: Decimal
+    let saltRate: Decimal
 }
 
 final class RSUCalculator {
+    
+    /// Round a Decimal to 2 decimal places for currency display
+    static func roundToCurrency(_ value: Decimal) -> Decimal {
+        var rounded = Decimal()
+        var input = value
+        NSDecimalRound(&rounded, &input, 2, .bankers)
+        return rounded
+    }
+    
+    /// Calculate capital gains tax rate (federal + SALT + optional NIIT)
+    private func calculateCapitalGainsRate(
+        federalRate: Decimal,
+        saltRate: Decimal,
+        includeNetInvestmentTax: Bool
+    ) -> Decimal {
+        var capitalGainsRate = federalRate + saltRate
+        if includeNetInvestmentTax {
+            capitalGainsRate += Decimal(0.038) // 3.8% NIIT
+        }
+        return capitalGainsRate
+    }
     
     /// Calculate the required sale price for remaining shares to achieve target net income
     /// 
@@ -20,37 +59,47 @@ final class RSUCalculator {
     /// (after tax withholding shares are sold) to achieve the same net income you would
     /// have received if the vest day price equaled the VCD price.
     func calculateRequiredSalePrice(
-        vcdPrice: Double,
+        vcdPrice: Decimal,
         vestingShares: Int,
-        vestDayPrice: Double,
-        medicareRate: Double,
-        socialSecurityRate: Double,
-        federalRate: Double,
-        saltRate: Double,
+        vestDayPrice: Decimal,
+        medicareRate: Decimal,
+        socialSecurityRate: Decimal,
+        federalRate: Decimal,
+        saltRate: Decimal,
         sharesSoldForTaxes: Int,
-        taxSalePrice: Double,
+        taxSalePrice: Decimal,
         includeCapitalGains: Bool = false,
         includeNetInvestmentTax: Bool = false
     ) -> RSUCalculationResult {
         
         // Step 1: Calculate gross income using VCD price (baseline scenario)
-        let grossIncomeVCD = Double(vestingShares) * vcdPrice
+        let grossIncomeVCD = Decimal(vestingShares) * vcdPrice
         
         // Step 2: Calculate gross income using actual vest day price
-        let grossIncomeVestDay = Double(vestingShares) * vestDayPrice
+        let grossIncomeVestDay = Decimal(vestingShares) * vestDayPrice
         
         // Step 3: Calculate total tax rate using precise individual components
         // Federal: 22%, Social Security: 6.2%, Medicare: 1.45%, SALT: varies
-        // Note: Using round() to match actual withholding behavior (rounds to nearest cent)
-        let federalTax = round(grossIncomeVestDay * federalRate * 100) / 100
-        let socialSecurityTax = round(grossIncomeVestDay * socialSecurityRate * 100) / 100
-        let medicareTax = round(grossIncomeVestDay * medicareRate * 100) / 100
-        let saltTax = round(grossIncomeVestDay * saltRate * 100) / 100
-        let totalTaxAmount = federalTax + socialSecurityTax + medicareTax + saltTax
-        let totalTaxRate = totalTaxAmount / grossIncomeVestDay
+        // Note: Using Decimal for exact precision
         
-        // Step 4: Calculate tax amount based on vest day price using precise components
-        let taxAmount = totalTaxAmount
+        // Store raw unrounded values for accurate summation
+        let federalTaxRaw = grossIncomeVestDay * federalRate
+        let socialSecurityTaxRaw = grossIncomeVestDay * socialSecurityRate
+        let medicareTaxRaw = grossIncomeVestDay * medicareRate
+        let saltTaxRaw = grossIncomeVestDay * saltRate
+
+        let roundedFederalTax = RSUCalculator.roundToCurrency(federalTaxRaw)
+        let roundedSocialSecurityTax = RSUCalculator.roundToCurrency(socialSecurityTaxRaw)
+        let roundedMedicareTax = RSUCalculator.roundToCurrency(medicareTaxRaw)
+        let roundedSaltTax = RSUCalculator.roundToCurrency(saltTaxRaw)
+
+        // Sum the raw values to avoid rounding errors
+        let totalTaxAmount = roundedFederalTax + roundedSocialSecurityTax + roundedMedicareTax + roundedSaltTax
+
+        // Calculate tax rate from raw values for accuracy
+        let totalTaxRate = federalRate + socialSecurityRate + medicareRate + saltRate
+        
+        // Step 4: Total tax amount is already calculated above
         
         // Step 5: Calculate target net income (what you would get if vest day price = VCD price)
         let netIncomeTarget = grossIncomeVCD - (grossIncomeVCD * totalTaxRate)
@@ -59,118 +108,148 @@ final class RSUCalculator {
         let sharesAfterTaxSale = vestingShares - sharesSoldForTaxes
         
         // Step 7: Calculate proceeds from tax sale
-        let taxSaleProceeds = Double(sharesSoldForTaxes) * taxSalePrice
+        let taxSaleProceeds = Decimal(sharesSoldForTaxes) * taxSalePrice
         
         // Step 8: Calculate cash distribution received (excess from tax sale after paying taxes)
-        let cashDistribution = taxSaleProceeds - taxAmount
-        
+        let roundedCashDistribution = RSUCalculator.roundToCurrency(taxSaleProceeds - totalTaxAmount)
+
         // Step 9: Calculate adjusted target net income (subtract cash already received)
-        let adjustedNetIncomeTarget = netIncomeTarget - cashDistribution
-        
+        let adjustedNetIncomeTarget = netIncomeTarget - roundedCashDistribution
+
         // Step 10: Calculate required sale price for remaining shares
         // Formula: Adjusted Target Net Income / Remaining Shares
-        var requiredSalePrice = sharesAfterTaxSale > 0 ? adjustedNetIncomeTarget / Double(sharesAfterTaxSale) : 0.0
+        var requiredSalePrice = sharesAfterTaxSale > 0 ? adjustedNetIncomeTarget / Decimal(sharesAfterTaxSale) : Decimal(0)
         
-        // Step 11: Adjust for capital gains tax if applicable
-        if includeCapitalGains && requiredSalePrice > vestDayPrice {
+        // Step 11: Calculate capital gains rate once if needed
+        let capitalGainsRate: Decimal? = includeCapitalGains ? calculateCapitalGainsRate(
+            federalRate: federalRate,
+            saltRate: saltRate,
+            includeNetInvestmentTax: includeNetInvestmentTax
+        ) : nil
+        
+        // Step 11a: Adjust for capital gains tax if applicable
+        if let rate = capitalGainsRate, requiredSalePrice > vestDayPrice {
             // If sale price > vest day price, there's a capital gain
             // Short-term capital gains are taxed at your marginal federal income tax rate + SALT rate
             // High-income earners may also be subject to 3.8% Net Investment Income Tax (NIIT)
-            var capitalGainsRate = federalRate + saltRate
-            if includeNetInvestmentTax {
-                capitalGainsRate += 0.038 // 3.8% NIIT
-            }
             
             // We need to account for capital gains tax on the profit
             // Simple approach: targetNetPerShare = salePrice - (salePrice - vestDayPrice) * capitalGainsRate
             // Solving for salePrice: salePrice = (targetNetPerShare - vestDayPrice * capitalGainsRate) / (1 - capitalGainsRate)
-            let targetNetPerShare = adjustedNetIncomeTarget / Double(sharesAfterTaxSale)
-            requiredSalePrice = (targetNetPerShare - vestDayPrice * capitalGainsRate) / (1 - capitalGainsRate)
+            let targetNetPerShare = adjustedNetIncomeTarget / Decimal(sharesAfterTaxSale)
+            requiredSalePrice = (targetNetPerShare - vestDayPrice * rate) / (Decimal(1) - rate)
         }
         
-        // Calculate capital gains tax if applicable
-        let capitalGainsTax: Double?
+        // Step 11b: Calculate capital gains tax amount if applicable
+        let capitalGainsTax: Decimal?
         
-        if includeCapitalGains && requiredSalePrice > vestDayPrice {
+        if let rate = capitalGainsRate, requiredSalePrice > vestDayPrice {
             let profitPerShare = requiredSalePrice - vestDayPrice
-            var capitalGainsRate = federalRate + saltRate
-            if includeNetInvestmentTax {
-                capitalGainsRate += 0.038 // 3.8% NIIT
-            }
-            capitalGainsTax = profitPerShare * capitalGainsRate * Double(sharesAfterTaxSale)
+            capitalGainsTax = profitPerShare * rate * Decimal(sharesAfterTaxSale)
         } else {
             capitalGainsTax = nil
         }
         
+        // Apply currency rounding (2 decimal places) to calculated monetary values only
+        // Keep input values precise to avoid affecting calculations
+        let roundedGrossIncomeVCD = RSUCalculator.roundToCurrency(grossIncomeVCD)
+        let roundedGrossIncomeVestDay = RSUCalculator.roundToCurrency(grossIncomeVestDay)
+        let roundedTaxSaleProceeds = RSUCalculator.roundToCurrency(taxSaleProceeds)
+        let roundedNetIncomeTarget = RSUCalculator.roundToCurrency(netIncomeTarget)
+        let roundedAdjustedNetIncomeTarget = RSUCalculator.roundToCurrency(adjustedNetIncomeTarget)
+        let roundedRequiredSalePrice = RSUCalculator.roundToCurrency(requiredSalePrice)
+        let roundedCapitalGainsTax = capitalGainsTax.map { RSUCalculator.roundToCurrency($0) }
+        
         return RSUCalculationResult(
-            grossIncomeVCD: grossIncomeVCD,
-            grossIncomeVestDay: grossIncomeVestDay,
+            grossIncomeVCD: roundedGrossIncomeVCD,
+            grossIncomeVestDay: roundedGrossIncomeVestDay,
             totalTaxRate: totalTaxRate,
-            taxAmount: taxAmount,
-            netIncomeTarget: adjustedNetIncomeTarget,
+            taxAmount: totalTaxAmount,
+            federalTax: roundedFederalTax,
+            socialSecurityTax: roundedSocialSecurityTax,
+            medicareTax: roundedMedicareTax,
+            saltTax: roundedSaltTax,
+            netIncomeTarget: roundedAdjustedNetIncomeTarget,
             sharesAfterTaxSale: sharesAfterTaxSale,
-            taxSaleProceeds: taxSaleProceeds,
-            requiredSalePrice: requiredSalePrice,
-            capitalGainsTax: capitalGainsTax
+            taxSaleProceeds: roundedTaxSaleProceeds,
+            requiredSalePrice: roundedRequiredSalePrice,
+            capitalGainsTax: roundedCapitalGainsTax,
+            cashDistribution: roundedCashDistribution,
+            adjustedNetIncomeTarget: roundedAdjustedNetIncomeTarget,
+            originalNetIncomeTarget: roundedNetIncomeTarget,
+            vestingShares: vestingShares,
+            sharesSoldForTaxes: sharesSoldForTaxes,
+            vcdPrice: vcdPrice,  // Keep original precision for input values
+            vestDayPrice: vestDayPrice,  // Keep original precision for input values
+            taxSalePrice: taxSalePrice,  // Keep original precision for input values
+            medicareRate: medicareRate,
+            socialSecurityRate: socialSecurityRate,
+            federalRate: federalRate,
+            saltRate: saltRate
         )
+    }
+    
+    /// Validate a tax rate is between 0 and 1
+    private func validateTaxRate(_ rate: Decimal, name: String) -> String? {
+        if rate < Decimal(0) || rate > Decimal(1) {
+            return "\(name) rate must be between 0 and 1"
+        }
+        return nil
     }
     
     /// Validate input parameters for reasonable ranges
     func validateInputs(
-        vcdPrice: Double,
+        vcdPrice: Decimal,
         vestingShares: Int,
-        vestDayPrice: Double,
-        medicareRate: Double,
-        socialSecurityRate: Double,
-        federalRate: Double,
-        saltRate: Double,
+        vestDayPrice: Decimal,
+        medicareRate: Decimal,
+        socialSecurityRate: Decimal,
+        federalRate: Decimal,
+        saltRate: Decimal,
         sharesSoldForTaxes: Int,
-        taxSalePrice: Double
+        taxSalePrice: Decimal
     ) -> [String] {
         var errors: [String] = []
         
-        if vcdPrice <= 0 {
+        // Price validations
+        if vcdPrice <= Decimal(0) {
             errors.append("VCD price must be positive")
         }
+        if vestDayPrice <= Decimal(0) {
+            errors.append("Vest day price must be positive")
+        }
+        if taxSalePrice <= Decimal(0) {
+            errors.append("Tax sale price must be positive")
+        }
         
+        // Share validations
         if vestingShares <= 0 {
             errors.append("Vesting shares must be positive")
         }
-        
-        if vestDayPrice <= 0 {
-            errors.append("Vest day price must be positive")
-        }
-        
-        if medicareRate < 0 || medicareRate > 1 {
-            errors.append("Medicare rate must be between 0 and 1")
-        }
-        
-        if socialSecurityRate < 0 || socialSecurityRate > 1 {
-            errors.append("Social Security rate must be between 0 and 1")
-        }
-        
-        if federalRate < 0 || federalRate > 1 {
-            errors.append("Federal tax rate must be between 0 and 1")
-        }
-        
-        if saltRate < 0 || saltRate > 1 {
-            errors.append("SALT rate must be between 0 and 1")
-        }
-        
         if sharesSoldForTaxes < 0 {
             errors.append("Shares sold for taxes cannot be negative")
         }
-        
         if sharesSoldForTaxes > vestingShares {
             errors.append("Shares sold for taxes cannot exceed vesting shares")
         }
         
-        if taxSalePrice <= 0 {
-            errors.append("Tax sale price must be positive")
+        // Tax rate validations
+        let taxRateValidations = [
+            (medicareRate, "Medicare"),
+            (socialSecurityRate, "Social Security"),
+            (federalRate, "Federal tax"),
+            (saltRate, "SALT")
+        ]
+        
+        for (rate, name) in taxRateValidations {
+            if let error = validateTaxRate(rate, name: name) {
+                errors.append(error)
+            }
         }
         
+        // Total tax rate validation
         let totalTaxRate = medicareRate + socialSecurityRate + federalRate + saltRate
-        if totalTaxRate > 1 {
+        if totalTaxRate > Decimal(1) {
             errors.append("Total tax rate cannot exceed 100%")
         }
         
