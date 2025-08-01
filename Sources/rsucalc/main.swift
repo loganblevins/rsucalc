@@ -64,7 +64,7 @@ struct RSURunner: ParsableCommand {
     @Option(name: [.customShort("a"), .customLong("tax-sale-price")], help: "Price per share when sold for taxes")
     var taxSalePrice: DecimalArgument
     
-    @Flag(name: [.customShort("c"), .customLong("include-capital-gains")], help: "Include short-term capital gains tax calculation (uses federal tax rate)")
+    @Flag(name: [.customShort("c"), .customLong("include-capital-gains")], help: "Include short-term capital gains tax calculation (uses federal + SALT rates)")
     var includeCapitalGains: Bool = false
         
     @Flag(name: [.customShort("n"), .customLong("include-net-investment-tax")], help: "Include 3.8% Net Investment Income Tax (NIIT) on capital gains for high-income earners")
@@ -139,7 +139,12 @@ struct RSURunner: ParsableCommand {
                 print("✅ Capital gains tax applies (selling above vest price)")
                 print("💰 Capital Gains Tax: $\(formatAsCurrency(capitalGainsTax))")
                 
-                // Calculate all scenarios
+                if let niitTax = result.niitTax {
+                    print("🏛️  NIIT (3.8%): $\(formatAsCurrency(niitTax))")
+                    print("📊 Total Capital Gains + NIIT: $\(formatAsCurrency(capitalGainsTax + niitTax))")
+                }
+                
+                // Calculate price scenario without capital gains for comparison
                 let withoutCapGainsPrice = result.netIncomeTarget / Decimal(result.sharesAfterTaxSale)
                 
                 if includeNetInvestmentTax {

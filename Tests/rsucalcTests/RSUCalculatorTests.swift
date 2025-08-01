@@ -568,7 +568,10 @@ final class RSUCalculatorTests: XCTestCase {
         // With high tax rates, required sale price is above vest day price
         // So capital gains tax should be applied
         XCTAssertNotNil(result.capitalGainsTax)
-        XCTAssertEqual(result.capitalGainsTax!, 838.74, accuracy: 0.01)
+        // Capital gains tax should now be only federal + SALT (32% + 9.3% = 41.3%), not including NIIT
+        // Original total was 838.74, NIIT portion would be 3.8% / (32% + 9.3% + 3.8%) = 70.67
+        // So capital gains only should be 838.74 - 70.67 = 768.07
+        XCTAssertEqual(result.capitalGainsTax!, 768.07, accuracy: 0.01)
     }
     
     func testNetInvestmentTaxRateCalculation() {
@@ -648,8 +651,158 @@ final class RSUCalculatorTests: XCTestCase {
         XCTAssertTrue(result.capitalGainsTax! > 0)
     }
     
-
+    // MARK: - NIIT Amount Verification Tests
     
+    func testNIITAmountCalculation() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.22,
+            saltRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: true
+        )
+        
+        // Verify NIIT tax amount is calculated and not nil
+        XCTAssertNotNil(result.niitTax)
+        
+        // Calculate expected NIIT: 3.8% of profit per share * shares after tax sale
+        let profitPerShare = result.requiredSalePrice - Decimal(80.0)
+        let expectedNIIT = profitPerShare * Decimal(0.038) * Decimal(75)
+        
+        XCTAssertEqual(result.niitTax!, expectedNIIT, accuracy: 0.01)
+    }
+    
+    func testNIITAmountWhenDisabled() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 80.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.22,
+            saltRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 80.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: false
+        )
+        
+        // NIIT should be nil when not enabled
+        XCTAssertNil(result.niitTax)
+    }
+    
+    func testNIITAmountWhenNoCapitalGains() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 100.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.22,
+            saltRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 100.0,
+            includeCapitalGains: false,
+            includeNetInvestmentTax: true
+        )
+        
+        // NIIT should be nil when capital gains are disabled
+        XCTAssertNil(result.niitTax)
+    }
+    
+    func testNIITAmountWhenSellingAtVestPrice() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 100.0,
+            vestingShares: 100,
+            vestDayPrice: 100.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.22,
+            saltRate: 0.05,
+            sharesSoldForTaxes: 25,
+            taxSalePrice: 100.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: true
+        )
+        
+        // NIIT should be nil when selling at vest price (no profit)
+        XCTAssertNil(result.niitTax)
+        XCTAssertNil(result.capitalGainsTax)
+    }
+    
+    func testNIITAmountPrecisionHighValue() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 200.0,
+            vestingShares: 1000,
+            vestDayPrice: 155.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.22,
+            saltRate: 0.05,
+            sharesSoldForTaxes: 100,
+            taxSalePrice: 155.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: true
+        )
+        
+        // Verify NIIT is calculated for high-value scenario
+        XCTAssertNotNil(result.niitTax)
+        
+        // Verify NIIT is a reasonable portion of total capital gains
+        XCTAssertNotNil(result.capitalGainsTax)
+        XCTAssertLessThan(result.niitTax!, result.capitalGainsTax!)
+        
+        // NIIT and capital gains are now calculated separately
+        // Both should be 3.8% of the same profit base
+        // So NIIT should be (3.8% / (22% + 5%)) * capitalGainsTax = (3.8% / 27%) * capitalGainsTax
+        let capitalGainsRate = Decimal(0.22) + Decimal(0.05) // 27%
+        let niitRate = Decimal(0.038) // 3.8%
+        let expectedNIITRatio = niitRate / capitalGainsRate
+        let expectedNIITFromCapitalGains = result.capitalGainsTax! * expectedNIITRatio
+        XCTAssertEqual(result.niitTax!, expectedNIITFromCapitalGains, accuracy: 0.01)
+        
+        // Verify NIIT amount is positive and reasonable
+        XCTAssertGreaterThan(result.niitTax!, Decimal(1000))
+        XCTAssertLessThan(result.niitTax!, Decimal(5000))
+    }
+    
+    func testNIITAmountWithZeroSALT() {
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 150.0,
+            vestingShares: 500,
+            vestDayPrice: 120.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.22,
+            saltRate: 0.0, // No SALT tax
+            sharesSoldForTaxes: 50,
+            taxSalePrice: 120.0,
+            includeCapitalGains: true,
+            includeNetInvestmentTax: true
+        )
+        
+        // Verify NIIT is calculated even with zero SALT
+        XCTAssertNotNil(result.niitTax)
+        
+        // NIIT and capital gains are now calculated separately on the same profit base
+        // Capital gains = 22% of profit, NIIT = 3.8% of profit
+        // So NIIT should be (3.8% / 22%) * capitalGainsTax
+        let capitalGainsRate = Decimal(0.22) // 22% (federal only, no SALT)
+        let niitRate = Decimal(0.038) // 3.8%
+        let expectedNIITRatio = niitRate / capitalGainsRate
+        let expectedNIITFromCapitalGains = result.capitalGainsTax! * expectedNIITRatio
+        XCTAssertEqual(result.niitTax!, expectedNIITFromCapitalGains, accuracy: 0.01)
+        
+        // Verify NIIT amount is positive and reasonable for this scenario
+        XCTAssertGreaterThan(result.niitTax!, Decimal(400))
+        XCTAssertLessThan(result.niitTax!, Decimal(800))
+    }
 
     
     // MARK: - Real-World Case Tests

@@ -114,7 +114,7 @@ Common tax rates (enter as decimals):
 - **Social Security**: 6.2% = 0.062
 - **Federal**: 22% = 0.22, 24% = 0.24, 32% = 0.32
 - **SALT**: 5% = 0.05, 9.3% = 0.093
-- **Capital Gains**: Uses your federal + SALT rates (short-term capital gains are taxed at marginal federal income tax rate + SALT rate)
+- **Capital Gains**: Uses your federal + SALT rates for short-term capital gains (marginal federal income tax rate + SALT rate)
 
 ### Capital Gains Tax
 

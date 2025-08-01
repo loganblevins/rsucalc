@@ -14,6 +14,7 @@ struct RSUCalculationResult {
     let taxSaleProceeds: Decimal
     let requiredSalePrice: Decimal
     let capitalGainsTax: Decimal?
+    let niitTax: Decimal?
     
     // Additional fields for clean testing
     let cashDistribution: Decimal
@@ -30,6 +31,27 @@ struct RSUCalculationResult {
     let saltRate: Decimal
 }
 
+struct TaxCalculation {
+    let federalTax: Decimal
+    let socialSecurityTax: Decimal
+    let medicareTax: Decimal
+    let saltTax: Decimal
+    let capitalGainsTax: Decimal?
+    let niitTax: Decimal?
+    
+    var totalRegularTax: Decimal {
+        return federalTax + socialSecurityTax + medicareTax + saltTax
+    }
+    
+    var totalCapitalGainsTax: Decimal {
+        return (capitalGainsTax ?? 0) + (niitTax ?? 0)
+    }
+    
+    var totalTax: Decimal {
+        return totalRegularTax + totalCapitalGainsTax
+    }
+}
+
 final class RSUCalculator {
     
     /// Round a Decimal to 2 decimal places for currency display
@@ -38,6 +60,59 @@ final class RSUCalculator {
         var input = value
         NSDecimalRound(&rounded, &input, 2, .bankers)
         return rounded
+    }
+    
+    /// Calculate all taxes for a given income scenario
+    private func calculateTaxes(
+        grossIncome: Decimal,
+        profitPerShare: Decimal?,
+        sharesAfterTaxSale: Int,
+        federalRate: Decimal,
+        socialSecurityRate: Decimal,
+        medicareRate: Decimal,
+        saltRate: Decimal,
+        includeCapitalGains: Bool,
+        includeNetInvestmentTax: Bool
+    ) -> TaxCalculation {
+        // Calculate regular income taxes
+        let federalTaxRaw = grossIncome * federalRate
+        let socialSecurityTaxRaw = grossIncome * socialSecurityRate
+        let medicareTaxRaw = grossIncome * medicareRate
+        let saltTaxRaw = grossIncome * saltRate
+        
+        let federalTax = RSUCalculator.roundToCurrency(federalTaxRaw)
+        let socialSecurityTax = RSUCalculator.roundToCurrency(socialSecurityTaxRaw)
+        let medicareTax = RSUCalculator.roundToCurrency(medicareTaxRaw)
+        let saltTax = RSUCalculator.roundToCurrency(saltTaxRaw)
+        
+        // Calculate capital gains and NIIT taxes if applicable
+        var capitalGainsTax: Decimal? = nil
+        var niitTax: Decimal? = nil
+        
+        if includeCapitalGains, let profit = profitPerShare, profit > 0 {
+            // Short-term capital gains tax (federal + SALT rates, NIIT calculated separately)
+            let capitalGainsRate = federalRate + saltRate
+            capitalGainsTax = RSUCalculator.roundToCurrency(
+                profit * capitalGainsRate * Decimal(sharesAfterTaxSale)
+            )
+            
+            // NIIT tax (3.8% separately)
+            if includeNetInvestmentTax {
+                let niitRate = Decimal(0.038)
+                niitTax = RSUCalculator.roundToCurrency(
+                    profit * niitRate * Decimal(sharesAfterTaxSale)
+                )
+            }
+        }
+        
+        return TaxCalculation(
+            federalTax: federalTax,
+            socialSecurityTax: socialSecurityTax,
+            medicareTax: medicareTax,
+            saltTax: saltTax,
+            capitalGainsTax: capitalGainsTax,
+            niitTax: niitTax
+        )
     }
     
     /// Calculate capital gains tax rate (federal + SALT + optional NIIT)
@@ -78,25 +153,20 @@ final class RSUCalculator {
         // Step 2: Calculate gross income using actual vest day price
         let grossIncomeVestDay = Decimal(vestingShares) * vestDayPrice
         
-        // Step 3: Calculate total tax rate using precise individual components
-        // Federal: 22%, Social Security: 6.2%, Medicare: 1.45%, SALT: varies
-        // Note: Using Decimal for exact precision
+        // Step 3: Calculate initial taxes (without capital gains/NIIT)
+        let initialTaxes = calculateTaxes(
+            grossIncome: grossIncomeVestDay,
+            profitPerShare: nil, // No capital gains yet
+            sharesAfterTaxSale: 0, // Not needed for regular income taxes
+            federalRate: federalRate,
+            socialSecurityRate: socialSecurityRate,
+            medicareRate: medicareRate,
+            saltRate: saltRate,
+            includeCapitalGains: false,
+            includeNetInvestmentTax: false
+        )
         
-        // Store raw unrounded values for accurate summation
-        let federalTaxRaw = grossIncomeVestDay * federalRate
-        let socialSecurityTaxRaw = grossIncomeVestDay * socialSecurityRate
-        let medicareTaxRaw = grossIncomeVestDay * medicareRate
-        let saltTaxRaw = grossIncomeVestDay * saltRate
-
-        let roundedFederalTax = RSUCalculator.roundToCurrency(federalTaxRaw)
-        let roundedSocialSecurityTax = RSUCalculator.roundToCurrency(socialSecurityTaxRaw)
-        let roundedMedicareTax = RSUCalculator.roundToCurrency(medicareTaxRaw)
-        let roundedSaltTax = RSUCalculator.roundToCurrency(saltTaxRaw)
-
-        // Sum the raw values to avoid rounding errors
-        let totalTaxAmount = roundedFederalTax + roundedSocialSecurityTax + roundedMedicareTax + roundedSaltTax
-
-        // Calculate tax rate from raw values for accuracy
+        let totalTaxAmount = initialTaxes.totalRegularTax
         let totalTaxRate = federalRate + socialSecurityRate + medicareRate + saltRate
         
         // Step 4: Total tax amount is already calculated above
@@ -127,28 +197,37 @@ final class RSUCalculator {
             includeNetInvestmentTax: includeNetInvestmentTax
         ) : nil
         
-        // Step 11a: Adjust for capital gains tax if applicable
+        // Step 11a: Adjust required sale price for capital gains tax if applicable
         if let rate = capitalGainsRate, requiredSalePrice > vestDayPrice {
-            // If sale price > vest day price, there's a capital gain
-            // Short-term capital gains are taxed at your marginal federal income tax rate + SALT rate
-            // High-income earners may also be subject to 3.8% Net Investment Income Tax (NIIT)
+            // If sale price > vest day price, there's a capital gain that will be taxed
+            // RSUs held < 1 year: Short-term capital gains = marginal federal tax rate + SALT rate
+            // High-income earners may also owe 3.8% Net Investment Income Tax (NIIT)
             
-            // We need to account for capital gains tax on the profit
-            // Simple approach: targetNetPerShare = salePrice - (salePrice - vestDayPrice) * capitalGainsRate
+            // Adjust sale price to account for capital gains tax on the profit
+            // Formula derivation: targetNetPerShare = salePrice - (salePrice - vestDayPrice) * capitalGainsRate
             // Solving for salePrice: salePrice = (targetNetPerShare - vestDayPrice * capitalGainsRate) / (1 - capitalGainsRate)
             let targetNetPerShare = adjustedNetIncomeTarget / Decimal(sharesAfterTaxSale)
             requiredSalePrice = (targetNetPerShare - vestDayPrice * rate) / (Decimal(1) - rate)
         }
         
-        // Step 11b: Calculate capital gains tax amount if applicable
-        let capitalGainsTax: Decimal?
+        // Step 11b: Calculate final capital gains tax amounts for display purposes
+        let profitPerShare = (capitalGainsRate != nil && requiredSalePrice > vestDayPrice) ? 
+            requiredSalePrice - vestDayPrice : nil
         
-        if let rate = capitalGainsRate, requiredSalePrice > vestDayPrice {
-            let profitPerShare = requiredSalePrice - vestDayPrice
-            capitalGainsTax = profitPerShare * rate * Decimal(sharesAfterTaxSale)
-        } else {
-            capitalGainsTax = nil
-        }
+        let finalTaxes = calculateTaxes(
+            grossIncome: grossIncomeVestDay,
+            profitPerShare: profitPerShare,
+            sharesAfterTaxSale: sharesAfterTaxSale,
+            federalRate: federalRate,
+            socialSecurityRate: socialSecurityRate,
+            medicareRate: medicareRate,
+            saltRate: saltRate,
+            includeCapitalGains: includeCapitalGains,
+            includeNetInvestmentTax: includeNetInvestmentTax
+        )
+        
+        let capitalGainsTax = finalTaxes.capitalGainsTax
+        let niitTax = finalTaxes.niitTax
         
         // Apply currency rounding (2 decimal places) to calculated monetary values only
         // Keep input values precise to avoid affecting calculations
@@ -158,22 +237,21 @@ final class RSUCalculator {
         let roundedNetIncomeTarget = RSUCalculator.roundToCurrency(netIncomeTarget)
         let roundedAdjustedNetIncomeTarget = RSUCalculator.roundToCurrency(adjustedNetIncomeTarget)
         let roundedRequiredSalePrice = RSUCalculator.roundToCurrency(requiredSalePrice)
-        let roundedCapitalGainsTax = capitalGainsTax.map { RSUCalculator.roundToCurrency($0) }
-        
         return RSUCalculationResult(
             grossIncomeVCD: roundedGrossIncomeVCD,
             grossIncomeVestDay: roundedGrossIncomeVestDay,
             totalTaxRate: totalTaxRate,
             taxAmount: totalTaxAmount,
-            federalTax: roundedFederalTax,
-            socialSecurityTax: roundedSocialSecurityTax,
-            medicareTax: roundedMedicareTax,
-            saltTax: roundedSaltTax,
+            federalTax: initialTaxes.federalTax,
+            socialSecurityTax: initialTaxes.socialSecurityTax,
+            medicareTax: initialTaxes.medicareTax,
+            saltTax: initialTaxes.saltTax,
             netIncomeTarget: roundedAdjustedNetIncomeTarget,
             sharesAfterTaxSale: sharesAfterTaxSale,
             taxSaleProceeds: roundedTaxSaleProceeds,
             requiredSalePrice: roundedRequiredSalePrice,
-            capitalGainsTax: roundedCapitalGainsTax,
+            capitalGainsTax: capitalGainsTax,
+            niitTax: niitTax,
             cashDistribution: roundedCashDistribution,
             adjustedNetIncomeTarget: roundedAdjustedNetIncomeTarget,
             originalNetIncomeTarget: roundedNetIncomeTarget,
