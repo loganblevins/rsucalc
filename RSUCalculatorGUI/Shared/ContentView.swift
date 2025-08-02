@@ -5,33 +5,32 @@ struct ContentView: View {
     @StateObject private var viewModel = RSUCalculatorViewModel()
     
     var body: some View {
-        NavigationView {
-            #if os(macOS)
-            // macOS: Side-by-side layout
-            HStack(spacing: 0) {
-                RSUInputView(viewModel: viewModel)
-                    .frame(minWidth: 400, maxWidth: 500)
-                
-                Divider()
-                
-                if viewModel.hasCalculated {
-                    RSUResultsView(viewModel: viewModel)
-                        .frame(minWidth: 600)
-                } else {
-                    VStack {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: 64))
-                            .foregroundColor(.secondary)
-                        Text("Enter your RSU details to see calculations")
-                            .font(.title2)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #if os(macOS)
+        // macOS: Direct side-by-side layout without NavigationView
+        HStack(spacing: 0) {
+            RSUInputView(viewModel: viewModel)
+                .frame(minWidth: 400, maxWidth: 500)
+            
+            Divider()
+            
+            if viewModel.hasCalculated {
+                RSUResultsView(viewModel: viewModel)
+                    .frame(minWidth: 600)
+            } else {
+                VStack {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.system(size: 64))
+                        .foregroundColor(.secondary)
+                    Text("Enter your RSU details to see calculations")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .navigationTitle("RSU Calculator")
-            #else
-            // iOS: Tabbed layout
+        }
+        #else
+        // iOS: Tab-based layout
+        NavigationView {
             TabView {
                 RSUInputView(viewModel: viewModel)
                     .tabItem {
@@ -49,7 +48,8 @@ struct ContentView: View {
             }
             .navigationTitle("RSU Calculator")
             .navigationBarTitleDisplayMode(.large)
-            #endif
         }
+        .navigationViewStyle(StackNavigationViewStyle())
+        #endif
     }
 }
