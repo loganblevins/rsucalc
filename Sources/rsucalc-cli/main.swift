@@ -1,5 +1,6 @@
 import Foundation
 import ArgumentParser
+import RSUCalculatorCore
 
 struct DecimalArgument: ExpressibleByArgument {
     let value: Decimal

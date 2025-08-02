@@ -1,5 +1,5 @@
 import XCTest
-@testable import rsucalc
+@testable import RSUCalculatorCore
 
 final class RSUCalculatorTests: XCTestCase {
     

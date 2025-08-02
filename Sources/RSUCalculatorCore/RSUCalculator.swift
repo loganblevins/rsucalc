@@ -1,34 +1,90 @@
 import Foundation
 
-struct RSUCalculationResult {
-    let grossIncomeVCD: Decimal
-    let grossIncomeVestDay: Decimal
-    let totalTaxRate: Decimal
-    let taxAmount: Decimal
-    let federalTax: Decimal
-    let socialSecurityTax: Decimal
-    let medicareTax: Decimal
-    let saltTax: Decimal
-    let netIncomeTarget: Decimal
-    let sharesAfterTaxSale: Int
-    let taxSaleProceeds: Decimal
-    let requiredSalePrice: Decimal
-    let capitalGainsTax: Decimal?
-    let niitTax: Decimal?
+public struct RSUCalculationResult {
+    public let grossIncomeVCD: Decimal
+    public let grossIncomeVestDay: Decimal
+    public let totalTaxRate: Decimal
+    public let taxAmount: Decimal
+    public let federalTax: Decimal
+    public let socialSecurityTax: Decimal
+    public let medicareTax: Decimal
+    public let saltTax: Decimal
+    public let netIncomeTarget: Decimal
+    public let sharesAfterTaxSale: Int
+    public let taxSaleProceeds: Decimal
+    public let requiredSalePrice: Decimal
+    public let capitalGainsTax: Decimal?
+    public let niitTax: Decimal?
     
     // Additional fields for clean testing
-    let cashDistribution: Decimal
-    let adjustedNetIncomeTarget: Decimal
-    let originalNetIncomeTarget: Decimal
-    let vestingShares: Int
-    let sharesSoldForTaxes: Int
-    let vcdPrice: Decimal
-    let vestDayPrice: Decimal
-    let taxSalePrice: Decimal
-    let medicareRate: Decimal
-    let socialSecurityRate: Decimal
-    let federalRate: Decimal
-    let saltRate: Decimal
+    public let cashDistribution: Decimal
+    public let adjustedNetIncomeTarget: Decimal
+    public let originalNetIncomeTarget: Decimal
+    public let vestingShares: Int
+    public let sharesSoldForTaxes: Int
+    public let vcdPrice: Decimal
+    public let vestDayPrice: Decimal
+    public let taxSalePrice: Decimal
+    public let medicareRate: Decimal
+    public let socialSecurityRate: Decimal
+    public let federalRate: Decimal
+    public let saltRate: Decimal
+    
+    public init(
+        grossIncomeVCD: Decimal,
+        grossIncomeVestDay: Decimal,
+        totalTaxRate: Decimal,
+        taxAmount: Decimal,
+        federalTax: Decimal,
+        socialSecurityTax: Decimal,
+        medicareTax: Decimal,
+        saltTax: Decimal,
+        netIncomeTarget: Decimal,
+        sharesAfterTaxSale: Int,
+        taxSaleProceeds: Decimal,
+        requiredSalePrice: Decimal,
+        capitalGainsTax: Decimal?,
+        niitTax: Decimal?,
+        cashDistribution: Decimal,
+        adjustedNetIncomeTarget: Decimal,
+        originalNetIncomeTarget: Decimal,
+        vestingShares: Int,
+        sharesSoldForTaxes: Int,
+        vcdPrice: Decimal,
+        vestDayPrice: Decimal,
+        taxSalePrice: Decimal,
+        medicareRate: Decimal,
+        socialSecurityRate: Decimal,
+        federalRate: Decimal,
+        saltRate: Decimal
+    ) {
+        self.grossIncomeVCD = grossIncomeVCD
+        self.grossIncomeVestDay = grossIncomeVestDay
+        self.totalTaxRate = totalTaxRate
+        self.taxAmount = taxAmount
+        self.federalTax = federalTax
+        self.socialSecurityTax = socialSecurityTax
+        self.medicareTax = medicareTax
+        self.saltTax = saltTax
+        self.netIncomeTarget = netIncomeTarget
+        self.sharesAfterTaxSale = sharesAfterTaxSale
+        self.taxSaleProceeds = taxSaleProceeds
+        self.requiredSalePrice = requiredSalePrice
+        self.capitalGainsTax = capitalGainsTax
+        self.niitTax = niitTax
+        self.cashDistribution = cashDistribution
+        self.adjustedNetIncomeTarget = adjustedNetIncomeTarget
+        self.originalNetIncomeTarget = originalNetIncomeTarget
+        self.vestingShares = vestingShares
+        self.sharesSoldForTaxes = sharesSoldForTaxes
+        self.vcdPrice = vcdPrice
+        self.vestDayPrice = vestDayPrice
+        self.taxSalePrice = taxSalePrice
+        self.medicareRate = medicareRate
+        self.socialSecurityRate = socialSecurityRate
+        self.federalRate = federalRate
+        self.saltRate = saltRate
+    }
 }
 
 struct TaxCalculation {
@@ -52,10 +108,12 @@ struct TaxCalculation {
     }
 }
 
-final class RSUCalculator {
+public final class RSUCalculator {
+    
+    public init() {}
     
     /// Round a Decimal to 2 decimal places for currency display
-    static func roundToCurrency(_ value: Decimal) -> Decimal {
+    public static func roundToCurrency(_ value: Decimal) -> Decimal {
         var rounded = Decimal()
         var input = value
         NSDecimalRound(&rounded, &input, 2, .bankers)
@@ -133,7 +191,7 @@ final class RSUCalculator {
     /// This calculation determines what price you need to sell your remaining shares at
     /// (after tax withholding shares are sold) to achieve the same net income you would
     /// have received if the vest day price equaled the VCD price.
-    func calculateRequiredSalePrice(
+    public func calculateRequiredSalePrice(
         vcdPrice: Decimal,
         vestingShares: Int,
         vestDayPrice: Decimal,
@@ -276,7 +334,7 @@ final class RSUCalculator {
     }
     
     /// Validate input parameters for reasonable ranges
-    func validateInputs(
+    public func validateInputs(
         vcdPrice: Decimal,
         vestingShares: Int,
         vestDayPrice: Decimal,

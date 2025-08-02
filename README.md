@@ -1,33 +1,131 @@
-# RSU Calculator CLI
+# RSU Calculator
 
 > ⚠️ **AI-Generated Code Disclaimer**: This project was largely written by AI (Claude) and contains significant amounts of AI-generated code and documentation. While functional and tested, much of the content may be considered "AI slop" - use at your own discretion and verify calculations independently for any financial decisions.
 
-A command-line tool for calculating RSU (Restricted Stock Unit) vesting scenarios and determining required sale prices to achieve target net income.
+A comprehensive RSU (Restricted Stock Unit) calculator providing **three distinct applications** from a single codebase: CLI tool, macOS app, and iOS app. Calculate vesting scenarios and determine required sale prices to achieve target net income.
 
-## Overview
+## 🚀 **Complete Multi-Platform Solution**
 
-This tool helps you calculate what price you need to sell your remaining RSU shares at (after tax withholding shares are sold) to achieve the same net income you would have received if the vest day price equaled your VCD (Vesting Commencement Date) price.
+This project transformed from a CLI-only tool into a **complete ecosystem** with three separate applications:
 
-## Installation
+1. **🔧 CLI Tool** - Command-line interface for power users and automation
+2. **💻 macOS App** - Native desktop experience with SwiftUI
+3. **📱 iOS App** - Mobile calculations on-the-go
 
-1. Clone this repository
-2. Build the project:
-   ```bash
-   swift build -c release
-   ```
-3. The executable will be available at `.build/release/rsucalc`
+All applications share the same proven calculation engine while providing the optimal interface for each use case.
 
-## Usage
+## 📋 **Project Architecture**
 
-### Development Usage
-```bash
-swift run rsucalc [OPTIONS]
+```
+rsucalc/                                 # 🏠 Project Root Directory
+├── 🔧 Swift Package (CLI + Core Logic)
+│   ├── Package.swift                   # Swift Package configuration
+│   ├── Sources/RSUCalculatorCore/      # Shared business logic
+│   │   └── RSUCalculator.swift
+│   ├── Sources/rsucalc-cli/           # CLI executable  
+│   │   └── main.swift
+│   └── Tests/rsucalcTests/            # Comprehensive test suite
+│       └── RSUCalculatorTests.swift
+│
+├── 🎯 Xcode Project (GUI Apps)
+│   └── RSUCalculatorUnified.xcodeproj/ # Multi-platform GUI project
+│
+└── 📱 SwiftUI Source Code
+    └── RSUCalculatorGUI/               # GUI components (separate from package)
+        ├── Shared/                     # Cross-platform SwiftUI application
+        │   ├── RSUCalculatorApp.swift  # App entry point
+        │   ├── ContentView.swift      # Platform-adaptive main view
+        │   ├── RSUCalculatorViewModel.swift # Observable state management
+        │   ├── RSUInputView.swift     # Input form interface
+        │   ├── RSUResultsView.swift   # Results display interface
+        │   └── Assets.xcassets/       # App assets
+        └── macOS/                     # Platform-specific resources
+            └── RSU_Calculator_macOS.entitlements
 ```
 
-### Production Usage (after building)
+### **🏗️ Clean Separation Benefits**
+
+- **✅ DRY Principle**: Single calculation engine shared across all apps
+- **✅ Build System Isolation**: Swift Package (CLI) and Xcode (GUI) are completely separate
+- **✅ Clear Boundaries**: Package manages CLI/core, Xcode references GUI source externally  
+- **✅ Independent Development**: Work on CLI without affecting GUI project structure
+- **✅ Maintainability**: Core logic changes automatically benefit all apps
+
+## 🚀 **Installation & Usage**
+
+### **🔧 CLI Tool (Swift Package Manager)**
+
 ```bash
-./rsucalc [OPTIONS]
+# Clone repository
+git clone <repository-url>
+cd rsucalc
+
+# Quick development usage
+swift run rsucalc-cli --help
+
+# Build for production
+swift build -c release
+# Executable will be at: .build/release/rsucalc-cli
 ```
+
+### **🎯 GUI Applications (Xcode)**
+
+```bash
+# Open the unified Xcode project
+open RSUCalculatorUnified.xcodeproj
+```
+
+**In Xcode:**
+- Select **"RSU Calculator (macOS)"** scheme → Run macOS app ⌘R
+- Select **"RSU Calculator (iOS)"** scheme → Run iOS app ⌘R
+
+## 📱 **How to Use Each Application**
+
+### **🔧 CLI Tool - Terminal Usage**
+
+**Quick Help:**
+```bash
+swift run rsucalc-cli --help
+```
+
+**Development Usage:**
+```bash
+swift run rsucalc-cli [OPTIONS]
+```
+
+**Production Usage:**
+```bash
+./.build/release/rsucalc-cli [OPTIONS]
+```
+
+### **💻 macOS App - Desktop Experience**
+
+- **Side-by-side layout** for easy input and results viewing
+- **Native macOS interface** with proper keyboard navigation
+- **Real-time validation** and calculation updates
+- **Copy/paste support** for easy data entry
+
+### **📱 iOS App - Mobile Convenience**
+
+- **Tabbed interface** optimized for mobile screens  
+- **Touch-friendly controls** with large input areas
+- **Automatic layout adaptation** for different screen sizes
+- **On-the-go calculations** when away from your computer
+
+### **🎯 Xcode Scheme Information**
+
+When you open `RSUCalculatorUnified.xcodeproj`, you'll see several schemes:
+
+#### **✅ Use These Schemes:**
+- **`RSU Calculator (macOS)`** - Your macOS SwiftUI app
+- **`RSU Calculator (iOS)`** - Your iOS SwiftUI app
+
+#### **ℹ️ Auto-Generated (Usually Ignore):**
+- **`rsucalc-cli`** - CLI scheme (not properly configured for Xcode)
+- **`rsucalc-Package`** - Entire Swift Package build  
+- **`RSUCalculatorCore`** - Core library only
+
+**Recommendation:** Use the first two schemes for GUI development, and `swift run rsucalc-cli` in terminal for CLI usage.
 
 ### Required Options
 
@@ -50,7 +148,7 @@ swift run rsucalc [OPTIONS]
 
 **Development:**
 ```bash
-swift run rsucalc \
+swift run rsucalc-cli \
   --vcd-price 100.00 \
   --vesting-shares 100 \
   --vest-day-price 120.00 \
@@ -66,7 +164,7 @@ swift run rsucalc \
 
 **Production:**
 ```bash
-./rsucalc \
+./.build/release/rsucalc-cli \
   --vcd-price 100.00 \
   --vesting-shares 100 \
   --vest-day-price 120.00 \
@@ -82,7 +180,7 @@ swift run rsucalc \
 
 **Short options:**
 ```bash
-swift run rsucalc -v 100.00 -s 100 -p 120.00 -m 0.0145 -o 0.062 -r 0.22 -t 0.05 -x 25 -a 120.00 -c -n
+swift run rsucalc-cli -v 100.00 -s 100 -p 120.00 -m 0.0145 -o 0.062 -r 0.22 -t 0.05 -x 25 -a 120.00 -c -n
 ```
 
 ## How It Works
@@ -144,11 +242,11 @@ Use the `--include-net-investment-tax` flag along with `--include-capital-gains`
 - **Decision Making**: Compare different vesting scenarios
 - **Tax Planning**: Understand the impact of tax withholding on your net proceeds
 
-## Testing
+## ✅ **Verification & Testing**
 
-The project includes comprehensive unit tests to ensure calculation accuracy and handle edge cases.
+### **🧪 Running Tests**
 
-### Running Tests
+The project includes **43 comprehensive unit tests** with 100% pass rate:
 
 ```bash
 # Run all tests
@@ -156,26 +254,125 @@ swift test
 
 # Run specific test
 swift test --filter testRealWorldScenario
+
+# Build and test together
+swift build -c release && swift test
 ```
 
-### Test Coverage
+### **🎯 Test Coverage**
 
-The test suite includes comprehensive tests covering:
-- ✅ Basic calculation scenarios
-- ✅ Real-world RSU scenarios (4 different case studies)
-- ✅ Edge cases (zero taxes, all shares sold, etc.)
-- ✅ Large numbers and precision handling
-- ✅ Input validation with detailed error messages
-- ✅ Mathematical consistency verification
-- ✅ Performance benchmarks with large datasets
-- ✅ Capital gains tax calculations (federal + SALT rates)
-- ✅ Capital gains edge cases (no profit, losses, zero SALT)
-- ✅ Capital gains mathematical consistency
-- ✅ Net Investment Income Tax (NIIT) calculations
-- ✅ NIIT with various tax rate combinations
-- ✅ NIIT mathematical consistency and performance
+The test suite ensures calculation accuracy across:
+- ✅ **Basic calculation scenarios** - Core RSU calculations
+- ✅ **Real-world RSU scenarios** - 4 different case studies  
+- ✅ **Edge cases** - Zero taxes, all shares sold, etc.
+- ✅ **Large numbers** - Precision handling with big datasets
+- ✅ **Input validation** - Detailed error messages
+- ✅ **Mathematical consistency** - Cross-validation of calculations
+- ✅ **Performance benchmarks** - Speed tests with large datasets
+- ✅ **Capital gains tax** - Federal + SALT rate calculations
+- ✅ **Capital gains edge cases** - No profit, losses, zero SALT
+- ✅ **Net Investment Income Tax (NIIT)** - High-income scenarios
+- ✅ **NIIT combinations** - Various tax rate scenarios
 
-## Requirements
+### **🚀 Build Verification**
 
-- macOS 13.0 or later
-- Swift 5.9 or later 
+Before using any application, verify everything works:
+
+```bash
+# Verify CLI builds and tests pass
+swift build -c release
+swift test
+
+# Verify CLI works
+swift run rsucalc-cli --help
+
+# Verify macOS app builds (in Xcode)
+# Select "RSU Calculator (macOS)" scheme → Product → Build (⌘B)
+```
+
+## 🏗️ **Technical Architecture**
+
+### **🔧 Core Library (`RSUCalculatorCore`)**
+
+**Platform-agnostic business logic shared across all applications:**
+
+- **`RSUCalculator`** - Main calculation engine with all RSU logic
+- **`RSUCalculationResult`** - Comprehensive result data structure  
+- **Input validation** - Detailed error handling and validation
+- **Currency precision** - Proper rounding and financial calculations
+
+### **💻 CLI Application (`rsucalc-cli`)**
+
+**Built with Swift ArgumentParser for robust command-line interface:**
+
+- **Comprehensive CLI** - All features accessible via command-line flags
+- **Detailed output** - Formatted results with clear breakdowns
+- **Production ready** - Suitable for scripts and automation
+- **Development friendly** - Quick iteration with `swift run`
+
+### **📱 SwiftUI Applications (Unified Project)**
+
+**Cross-platform SwiftUI with platform-adaptive design:**
+
+- **`RSUCalculatorViewModel`** - Observable state management with `@StateObject`
+- **`RSUInputView`** - Form-based input with real-time validation  
+- **`RSUResultsView`** - Comprehensive results display
+- **`ContentView`** - Platform-adaptive layout (HStack for macOS, TabView for iOS)
+- **Shared codebase** - Single SwiftUI implementation for both platforms
+
+## 🛠️ **Development Workflow**
+
+### **🔧 CLI Development (Swift Package Manager)**
+
+```bash
+# Build CLI tool
+swift build --product rsucalc-cli
+
+# Run tests  
+swift test
+
+# Build for release
+swift build -c release
+
+# Quick development
+swift run rsucalc-cli --help
+```
+
+### **📱 GUI Development (Xcode)**
+
+```bash
+# Open unified project
+open RSUCalculatorUnified.xcodeproj
+
+# In Xcode:
+# - Select target scheme (macOS or iOS)
+# - Build with ⌘B  
+# - Run with ⌘R
+# - Test with ⌘U
+```
+
+### **🔄 Integration into Other Projects**
+
+To integrate this calculator into your own project:
+
+1. **Add dependency**: Include `RSUCalculatorCore` as a Swift Package dependency
+2. **Import**: `import RSUCalculatorCore`  
+3. **Use calculator**: Create `RSUCalculator` instance for calculations
+4. **Optional UI**: Copy SwiftUI views for ready-made interface
+
+## 📋 **Requirements**
+
+- **macOS 13.0+** (for macOS app)
+- **iOS 16.0+** (for iOS app)  
+- **Swift 5.9+** (for all components)
+- **Xcode 15.0+** (for GUI development)
+
+## 🎉 **Final Summary**
+
+You now have a **complete RSU Calculator ecosystem**:
+
+1. **🔧 CLI Tool** - `swift run rsucalc-cli` for power users and automation
+2. **💻 macOS App** - Native desktop experience with full GUI  
+3. **📱 iOS App** - Mobile calculations with touch-optimized interface
+
+All three applications share the same proven calculation engine, ensuring consistency while providing the optimal interface for each use case. The modular architecture makes it easy to maintain and extend! 🚀 

@@ -5,6 +5,13 @@
 ## User settings
 xcuserdata/
 
+## Scheme files (user-specific)
+*.xcscheme
+xcschememanagement.plist
+
+## Workspace settings
+*/project.xcworkspace/contents.xcworkspacedata
+
 ## compatibility with Xcode 8 and earlier (ignoring not required starting Xcode 9)
 *.xcscmblueprint
 *.xccheckout
