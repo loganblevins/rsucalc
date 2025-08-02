@@ -180,9 +180,6 @@ struct RSUInputView: View {
             }
             .padding()
         }
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
     }
 }
 

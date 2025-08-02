@@ -29,27 +29,32 @@ struct ContentView: View {
             }
         }
         #else
-        // iOS: Tab-based layout
-        NavigationView {
-            TabView {
+        // iOS: Tab-based layout with individual navigation
+        TabView {
+            NavigationView {
                 RSUInputView(viewModel: viewModel)
-                    .tabItem {
-                        Image(systemName: "pencil.and.list.clipboard")
-                        Text("Input")
-                    }
-                
-                if viewModel.hasCalculated {
+                    .navigationTitle("RSU Calculator")
+                    .navigationBarTitleDisplayMode(.large)
+            }
+            .navigationViewStyle(StackNavigationViewStyle())
+            .tabItem {
+                Image(systemName: "pencil.and.list.clipboard")
+                Text("Input")
+            }
+            
+            if viewModel.hasCalculated {
+                NavigationView {
                     RSUResultsView(viewModel: viewModel)
-                        .tabItem {
-                            Image(systemName: "chart.bar.doc.horizontal")
-                            Text("Results")
-                        }
+                        .navigationTitle("Results")
+                        .navigationBarTitleDisplayMode(.large)
+                }
+                .navigationViewStyle(StackNavigationViewStyle())
+                .tabItem {
+                    Image(systemName: "chart.bar.doc.horizontal")
+                    Text("Results")
                 }
             }
-            .navigationTitle("RSU Calculator")
-            .navigationBarTitleDisplayMode(.large)
         }
-        .navigationViewStyle(StackNavigationViewStyle())
         #endif
     }
 }

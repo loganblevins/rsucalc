@@ -156,9 +156,6 @@ struct RSUResultsView: View {
                 .padding()
             }
         }
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
     }
     
     private func recommendationText(for result: RSUCalculationResult) -> String {
