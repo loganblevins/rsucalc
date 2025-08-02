@@ -180,6 +180,7 @@ struct RSUInputView: View {
             }
             .padding()
         }
+        .scrollDismissesKeyboard(.immediately)
     }
 }
 

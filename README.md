@@ -246,7 +246,7 @@ Use the `--include-net-investment-tax` flag along with `--include-capital-gains`
 
 ### **🧪 Running Tests**
 
-The project includes **43 comprehensive unit tests** with 100% pass rate:
+The project includes **comprehensive unit tests**:
 
 ```bash
 # Run all tests
