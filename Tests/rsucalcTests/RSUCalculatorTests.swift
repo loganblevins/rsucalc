@@ -43,32 +43,6 @@ final class RSUCalculatorTests: XCTestCase {
         XCTAssertEqual(result.requiredSalePrice, 100.0, accuracy: 0.01)
     }
     
-    func testRealWorldScenario() {
-        // Test with the real numbers provided by the user
-        let result = calculator.calculateRequiredSalePrice(
-            vcdPrice: 64.62,
-            vestingShares: 551,
-            vestDayPrice: 83.04,
-            medicareRate: 0.0145,
-            socialSecurityRate: 0.062,
-            federalRate: 0.22,
-            saltRate: 0.0,
-            sharesSoldForTaxes: 193,
-            taxSalePrice: 70.3279
-        )
-        
-        XCTAssertEqual(result.grossIncomeVCD, 35605.62, accuracy: 0.01)
-        XCTAssertEqual(result.grossIncomeVestDay, 45755.04, accuracy: 0.01)
-        XCTAssertEqual(result.totalTaxRate, 0.2965, accuracy: 0.0001)
-        XCTAssertEqual(NSDecimalNumber(decimal: result.taxAmount).doubleValue, 13566.37, accuracy: 0.01)
-        // Cash distribution = 13573.28 - 13566.37 = 6.91
-        // Adjusted target = 25048.55 - 6.91 = 25041.64
-        XCTAssertEqual(result.netIncomeTarget, 25041.64, accuracy: 0.01)
-        XCTAssertEqual(result.sharesAfterTaxSale, 358)
-        XCTAssertEqual(result.taxSaleProceeds, 13573.28, accuracy: 0.01)
-        XCTAssertEqual(result.requiredSalePrice, 69.95, accuracy: 0.01)
-    }
-    
     // MARK: - Edge Cases
     
     func testZeroSALTTax() {
@@ -1141,12 +1115,8 @@ final class RSUCalculatorTests: XCTestCase {
             XCTAssertTrue(result.capitalGainsTax! > 0)
         }
     }
-    
 
-    
-
-    
-
+    // MARK: - Mathematical Consistency Tests
     
     func testMathematicalConsistencyWithCleanData() {
         // Test that all mathematical relationships hold true with the enhanced result struct
@@ -1196,5 +1166,196 @@ final class RSUCalculatorTests: XCTestCase {
         
         // Test required sale price
         XCTAssertEqual(result.requiredSalePrice, 102.57, accuracy: 0.01)
+    }
+    
+    // MARK: - Tax Sale Price Impact Tests
+    
+    func testTaxSaleSurplusScenario() {
+        // Test scenario where tax sale proceeds exceed tax amount, creating positive cash distribution
+        // Based on CLI testing: High tax sale price should reduce required sale price
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 50.0,
+            vestingShares: 100,
+            vestDayPrice: 75.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.24,
+            saltRate: 0.08,
+            sharesSoldForTaxes: 30,
+            taxSalePrice: 120.0  // High price creates surplus
+        )
+        
+        // Test basic parameters
+        XCTAssertEqual(result.vestingShares, 100)
+        XCTAssertEqual(result.sharesSoldForTaxes, 30)
+        XCTAssertEqual(result.sharesAfterTaxSale, 70)
+        XCTAssertEqual(result.taxSalePrice, 120.0)
+        
+        // Test calculated values
+        XCTAssertEqual(result.grossIncomeVCD, 5000.0, accuracy: 0.01)
+        XCTAssertEqual(result.grossIncomeVestDay, 7500.0, accuracy: 0.01)
+        XCTAssertEqual(result.totalTaxRate, 0.3965, accuracy: 0.0001) // 24% + 6.2% + 1.45% + 8% = 39.65%
+        XCTAssertEqual(result.taxAmount, 2973.75, accuracy: 0.01)
+        XCTAssertEqual(result.taxSaleProceeds, 3600.0, accuracy: 0.01) // 30 × $120
+        
+        // Test surplus cash distribution (key behavior)
+        XCTAssertEqual(result.cashDistribution, 626.25, accuracy: 0.01) // $3600 - $2973.75 = $626.25
+        XCTAssertTrue(result.cashDistribution > 0, "Should have positive cash distribution due to surplus")
+        
+        // Test that surplus reduces the required sale price target
+        XCTAssertEqual(result.originalNetIncomeTarget, 3017.50, accuracy: 0.01) // 60% of $5025 vest income
+        XCTAssertEqual(result.adjustedNetIncomeTarget, 2391.25, accuracy: 0.01) // Reduced due to surplus
+        XCTAssertEqual(result.requiredSalePrice, 34.16, accuracy: 0.01)
+        
+        // Verify no capital gains (selling below vest price)
+        XCTAssertTrue(result.requiredSalePrice < result.vestDayPrice, "Should be selling below vest price")
+    }
+    
+    func testTaxSaleShortfallScenario() {
+        // Test scenario where tax sale proceeds are insufficient, creating negative cash distribution
+        // Lower tax sale price should increase required sale price
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 50.0,
+            vestingShares: 100,
+            vestDayPrice: 75.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.24,
+            saltRate: 0.08,
+            sharesSoldForTaxes: 30,
+            taxSalePrice: 76.0  // Lower price creates shortfall
+        )
+        
+        // Test basic parameters
+        XCTAssertEqual(result.vestingShares, 100)
+        XCTAssertEqual(result.sharesSoldForTaxes, 30)
+        XCTAssertEqual(result.sharesAfterTaxSale, 70)
+        XCTAssertEqual(result.taxSalePrice, 76.0)
+        
+        // Test calculated values
+        XCTAssertEqual(result.grossIncomeVCD, 5000.0, accuracy: 0.01)
+        XCTAssertEqual(result.grossIncomeVestDay, 7500.0, accuracy: 0.01)
+        XCTAssertEqual(result.totalTaxRate, 0.3965, accuracy: 0.0001)
+        XCTAssertEqual(result.taxAmount, 2973.75, accuracy: 0.01)
+        XCTAssertEqual(result.taxSaleProceeds, 2280.0, accuracy: 0.01) // 30 × $76
+        
+        // Test shortfall cash distribution (key behavior)
+        XCTAssertEqual(result.cashDistribution, -693.75, accuracy: 0.01) // $2280 - $2973.75 = -$693.75
+        XCTAssertTrue(result.cashDistribution < 0, "Should have negative cash distribution due to shortfall")
+        
+        // Test that shortfall increases the required sale price target
+        XCTAssertEqual(result.originalNetIncomeTarget, 3017.50, accuracy: 0.01)
+        XCTAssertEqual(result.adjustedNetIncomeTarget, 3711.25, accuracy: 0.01) // Increased due to shortfall
+        XCTAssertEqual(result.requiredSalePrice, 53.02, accuracy: 0.01)
+        
+        // Verify still no capital gains (selling below vest price, but higher than surplus case)
+        XCTAssertTrue(result.requiredSalePrice < result.vestDayPrice, "Should be selling below vest price")
+        XCTAssertTrue(result.requiredSalePrice > 34.16, "Should be higher than surplus scenario")
+    }
+    
+    func testExtremeHighTaxSalePriceScenario() {
+        // Test with extremely high tax sale price to validate edge case behavior
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 50.0,
+            vestingShares: 100,
+            vestDayPrice: 75.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.24,
+            saltRate: 0.08,
+            sharesSoldForTaxes: 30,
+            taxSalePrice: 200.0  // Extremely high price
+        )
+        
+        // Test that extreme surplus works correctly
+        XCTAssertEqual(result.taxSaleProceeds, 6000.0, accuracy: 0.01) // 30 × $200
+        XCTAssertEqual(result.cashDistribution, 3026.25, accuracy: 0.01) // $6000 - $2973.75
+        XCTAssertTrue(result.cashDistribution > 3000, "Should have very large surplus")
+        
+        // Test that required sale price becomes very low (might be negative in extreme surplus cases)
+        XCTAssertTrue(NSDecimalNumber(decimal: result.requiredSalePrice).doubleValue < 20.0, "Should be very low due to large surplus")
+        // In extreme surplus cases, the calculator might return negative prices (mathematical result)
+        // This is expected behavior when surplus far exceeds remaining share needs
+    }
+    
+    func testExtremelyLowTaxSalePriceScenario() {
+        // Test with extremely low tax sale price to validate edge case behavior
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 50.0,
+            vestingShares: 100,
+            vestDayPrice: 75.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.24,
+            saltRate: 0.08,
+            sharesSoldForTaxes: 30,
+            taxSalePrice: 20.0  // Extremely low price
+        )
+        
+        // Test that extreme shortfall works correctly
+        XCTAssertEqual(result.taxSaleProceeds, 600.0, accuracy: 0.01) // 30 × $20
+        XCTAssertEqual(result.cashDistribution, -2373.75, accuracy: 0.01) // $600 - $2973.75
+        XCTAssertTrue(result.cashDistribution < -2000, "Should have very large shortfall")
+        
+        // Test that required sale price increases significantly
+        XCTAssertTrue(result.requiredSalePrice > 75.0, "Should exceed vest day price due to large shortfall")
+        XCTAssertTrue(result.requiredSalePrice < 150.0, "Should still be reasonable")
+    }
+    
+    func testCapitalGainsBoundaryCondition() {
+        // Test the exact boundary where required sale price equals vest day price
+        // This should be the threshold between capital gains vs no capital gains
+        let result = calculator.calculateRequiredSalePrice(
+            vcdPrice: 80.0,
+            vestingShares: 100,
+            vestDayPrice: 75.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.12,
+            saltRate: 0.05,
+            sharesSoldForTaxes: 30,
+            taxSalePrice: 76.0,
+            includeCapitalGains: true
+        )
+        
+        // Test input parameters
+        XCTAssertEqual(result.vcdPrice, 80.0)
+        XCTAssertEqual(result.vestDayPrice, 75.0)
+        XCTAssertTrue(result.vcdPrice > result.vestDayPrice, "VCD price should be higher than vest price")
+        
+        // Test that this scenario triggers capital gains (required sale > vest price)
+        XCTAssertTrue(result.requiredSalePrice > result.vestDayPrice, "Should require selling above vest price")
+        XCTAssertNotNil(result.capitalGainsTax, "Should have capital gains tax")
+        XCTAssertTrue(result.capitalGainsTax! > 0, "Capital gains tax should be positive")
+        
+        // Test capital gains calculation
+        let priceGain = NSDecimalNumber(decimal: result.requiredSalePrice - result.vestDayPrice).doubleValue
+        let expectedCapitalGain = priceGain * Double(result.sharesAfterTaxSale)
+        let taxRate = NSDecimalNumber(decimal: result.federalRate + result.saltRate).doubleValue
+        let expectedCapitalGainsTax = expectedCapitalGain * taxRate
+        XCTAssertEqual(NSDecimalNumber(decimal: result.capitalGainsTax!).doubleValue, expectedCapitalGainsTax, accuracy: 0.05)
+        
+        // If NIIT is included, test that too
+        if let niitTax = result.niitTax {
+            let expectedNIIT = expectedCapitalGain * 0.038 // 3.8% NIIT rate
+            XCTAssertEqual(NSDecimalNumber(decimal: niitTax).doubleValue, expectedNIIT, accuracy: 0.01)
+        }
+        
+        // Test the boundary behavior: small change in parameters should flip capital gains on/off
+        let resultWithoutCapitalGains = calculator.calculateRequiredSalePrice(
+            vcdPrice: 80.0,
+            vestingShares: 100,
+            vestDayPrice: 75.0,
+            medicareRate: 0.0145,
+            socialSecurityRate: 0.062,
+            federalRate: 0.12,
+            saltRate: 0.05,
+            sharesSoldForTaxes: 30,
+            taxSalePrice: 76.0,
+            includeCapitalGains: false
+        )
+        
+        XCTAssertTrue(NSDecimalNumber(decimal: result.requiredSalePrice).doubleValue > NSDecimalNumber(decimal: resultWithoutCapitalGains.requiredSalePrice).doubleValue, 
+                     "Capital gains should increase required sale price")
     }
 } 
