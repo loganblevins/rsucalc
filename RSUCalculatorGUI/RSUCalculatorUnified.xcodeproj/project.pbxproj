@@ -23,13 +23,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		B1B1B1B1B1B1B1B1B1B1B1B1 /* RSUCalculatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RSUCalculatorApp.swift; path = RSUCalculatorGUI/Shared/RSUCalculatorApp.swift; sourceTree = "<group>"; };
-		B1B1B1B1B1B1B1B1B1B1B1B2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = RSUCalculatorGUI/Shared/ContentView.swift; sourceTree = "<group>"; };
-		B1B1B1B1B1B1B1B1B1B1B1B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = RSUCalculatorGUI/Shared/Assets.xcassets; sourceTree = "<group>"; };
-		B1B1B1B1B1B1B1B1B1B1B1B4 /* RSU_Calculator_macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = RSU_Calculator_macOS.entitlements; path = RSUCalculatorGUI/macOS/RSU_Calculator_macOS.entitlements; sourceTree = "<group>"; };
-		B1B1B1B1B1B1B1B1B1B1B1B5 /* RSUCalculatorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RSUCalculatorViewModel.swift; path = RSUCalculatorGUI/Shared/RSUCalculatorViewModel.swift; sourceTree = "<group>"; };
-		B1B1B1B1B1B1B1B1B1B1B1B6 /* RSUInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RSUInputView.swift; path = RSUCalculatorGUI/Shared/RSUInputView.swift; sourceTree = "<group>"; };
-		B1B1B1B1B1B1B1B1B1B1B1B7 /* RSUResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RSUResultsView.swift; path = RSUCalculatorGUI/Shared/RSUResultsView.swift; sourceTree = "<group>"; };
+		B1B1B1B1B1B1B1B1B1B1B1B1 /* RSUCalculatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RSUCalculatorApp.swift; path = Sources/RSUCalculatorApp.swift; sourceTree = "<group>"; };
+		B1B1B1B1B1B1B1B1B1B1B1B2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = Sources/ContentView.swift; sourceTree = "<group>"; };
+		B1B1B1B1B1B1B1B1B1B1B1B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sources/Assets.xcassets; sourceTree = "<group>"; };
+		B1B1B1B1B1B1B1B1B1B1B1B4 /* RSU_Calculator_macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = RSU_Calculator_macOS.entitlements; path = macOS/RSU_Calculator_macOS.entitlements; sourceTree = "<group>"; };
+		B1B1B1B1B1B1B1B1B1B1B1B5 /* RSUCalculatorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RSUCalculatorViewModel.swift; path = Sources/RSUCalculatorViewModel.swift; sourceTree = "<group>"; };
+		B1B1B1B1B1B1B1B1B1B1B1B6 /* RSUInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RSUInputView.swift; path = Sources/RSUInputView.swift; sourceTree = "<group>"; };
+		B1B1B1B1B1B1B1B1B1B1B1B7 /* RSUResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RSUResultsView.swift; path = Sources/RSUResultsView.swift; sourceTree = "<group>"; };
 		B1C1C1C1C1C1C1C1C1C1C1C1 /* RSU Calculator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "RSU Calculator.app"; path = "RSU Calculator (iOS).app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1C1C1C1C1C1C1C1C1C1C1C2 /* RSU Calculator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "RSU Calculator.app"; path = "RSU Calculator (macOS).app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -164,7 +164,7 @@
 			);
 			mainGroup = B1E1E1E1E1E1E1E1E1E1E1E1;
 			packageReferences = (
-				B1A1A1A1A1A1A1A1A1A1A1AB /* XCLocalSwiftPackageReference "." */,
+				B1A1A1A1A1A1A1A1A1A1A1AB /* XCLocalSwiftPackageReference ".." */,
 			);
 			productRefGroup = B1E1E1E1E1E1E1E1E1E1E1E4 /* Products */;
 			projectDirPath = "";
@@ -408,7 +408,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = RSUCalculatorGUI/macOS/RSU_Calculator_macOS.entitlements;
+				CODE_SIGN_ENTITLEMENTS = macOS/RSU_Calculator_macOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -435,7 +435,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = RSUCalculatorGUI/macOS/RSU_Calculator_macOS.entitlements;
+				CODE_SIGN_ENTITLEMENTS = macOS/RSU_Calculator_macOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -490,21 +490,21 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		B1A1A1A1A1A1A1A1A1A1A1AB /* XCLocalSwiftPackageReference "." */ = {
+		B1A1A1A1A1A1A1A1A1A1A1AB /* XCLocalSwiftPackageReference ".." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = .;
+			relativePath = ..;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		B1A1A1A1A1A1A1A1A1A1A1A8 /* RSUCalculatorCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B1A1A1A1A1A1A1A1A1A1A1AB /* XCLocalSwiftPackageReference "." */;
+			package = B1A1A1A1A1A1A1A1A1A1A1AB /* XCLocalSwiftPackageReference ".." */;
 			productName = RSUCalculatorCore;
 		};
 		B1A1A1A1A1A1A1A1A1A1A1AA /* RSUCalculatorCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B1A1A1A1A1A1A1A1A1A1A1AB /* XCLocalSwiftPackageReference "." */;
+			package = B1A1A1A1A1A1A1A1A1A1A1AB /* XCLocalSwiftPackageReference ".." */;
 			productName = RSUCalculatorCore;
 		};
 /* End XCSwiftPackageProductDependency section */
