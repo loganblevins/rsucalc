@@ -152,7 +152,7 @@ struct RSUInputView: View {
                 VStack(spacing: 12) {
                     Button(action: viewModel.calculateRSU) {
                         HStack {
-                            Image(systemName: "calculator")
+                            Image(systemName: "plus.forwardslash.minus")
                             Text("Calculate Required Sale Price")
                         }
                         .font(.headline)
@@ -180,7 +180,7 @@ struct RSUInputView: View {
             }
             .padding()
         }
-        .scrollDismissesKeyboard(.immediately)
+        .scrollDismissesKeyboard(.interactively)
     }
 }
 
